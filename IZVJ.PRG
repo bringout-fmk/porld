@@ -3217,15 +3217,15 @@ m:="------------------------  ----------------              -------------------"
 
 aDbf:={   {"ID"    ,"C", 1,0},;
           {"IDOPS" ,"C", 4,0},;
-          {"IZNOS" ,"N",18,4},;
-          {"IZNOS2","N",18,4},;
-          {"LJUDI" ,"N", 4,0};
+          {"IZNOS" ,"N",25,4},;
+          {"IZNOS2","N",25,4},;
+          {"LJUDI" ,"N", 10,0};
       }
 
 #ifdef CPOR
-  AADD(aDbf, {"PIZNOS" ,"N",18,4})
-  AADD(aDbf, {"PIZNOS2","N",18,4})
-  AADD(aDbf, {"PLJUDI" ,"N", 4,0})
+  AADD(aDbf, {"PIZNOS" ,"N",25,4})
+  AADD(aDbf, {"PIZNOS2","N",25,4})
+  AADD(aDbf, {"PLJUDI" ,"N", 10,0})
 #endif
 
 //id- 1 opsstan
@@ -3245,8 +3245,8 @@ aDbf:={    {"GODINA"     ,  "C" , 4, 0 } ,;
            {"ID"         ,  "C" , 30, 0} ,;
            {"opis"       ,  "C" , 20, 0} ,;
            {"opis2"      ,  "C" , 35, 0} ,;
-           {"iznos1"     ,  "N" , 18, 4} ,;
-           {"iznos2"     ,  "N" , 18, 4} ;
+           {"iznos1"     ,  "N" , 25, 4} ,;
+           {"iznos2"     ,  "N" , 25, 4} ;
         }
 #ifdef CPOR
   AADD( aDbf , {"idpartner"  ,  "C" , 10, 0} )
