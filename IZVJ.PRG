@@ -3309,9 +3309,11 @@ START PRINT CRET
 IF IzFMKIni("LD","RekapitulacijaGustoPoVisini","N",KUMPATH)=="D"
   lGusto:=.t.
   gRPL_Gusto()
-  gPStranica+=11
+  nDSGusto:=VAL(IzFMKIni("RekapGustoPoVisini","DodatnihRedovaNaStranici","11",KUMPATH))
+  gPStranica+=nDSGusto
 ELSE
   lGusto:=.f.
+  nDSGusto:=0
 ENDIF
 
 ParObr(cmjesec,IF(lViseObr,cObracun,),IF(!fSvi,cIdRj,))      // samo pozicionira bazu PAROBR na odgovaraju†i zapis
@@ -4385,7 +4387,7 @@ endif
 FF
 IF lGusto
   gRPL_Normal()
-  gPStranica-=11
+  gPStranica-=nDSGusto
 ENDIF
 END PRINT
 #ifdef CAX
