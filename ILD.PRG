@@ -7,7 +7,7 @@
 
 #include "ini0c52.ch"
 
-PUBLIC cVer:='02.32mb'
+PUBLIC cVer:='02.33e'
 
 #ifdef C52
 PUBLIC cNaslov:="LD:Install CDX, 06.96-02.02"
@@ -877,3 +877,4 @@ function O_log()
 
 function reindex_all()
 
+function o_nar()
