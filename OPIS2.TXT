@@ -1,0 +1,30 @@
+                                      L  D
+                             modul za obracun plata
+                             **********************
+    30.09.1998.   Ferhat
+    Oznaka verzije nakon ispravke: 01.46
+
+    * Fajl: IZVJ.PRG
+    * Funkcija/procedura: UKartPl()
+
+    * Opis izmjene:
+          Omuguceno je da se pregled napravi pojedinacno za sve radne jedinice
+      u kojima je radnik radio u toku godine.
+
+    * Uvedeni novi fajlovi: _LD
+          Uveden je i indeks _LDi1/_LD (NTX/CDX) kako bi se moglo napraviti
+      sortiranje po radniku/radnoj jedinici.
+      *** Struktura _LD se morala mijenjati, jer sati (ostvareni u godini) ***
+      *** nisu mogli stati u "N 5 1" polja. Dakle, mijenja se definicija   ***
+      *** Sxx polja sa "N 5 1" na "N 8 1".                                 ***
+      *** Obzirom da se _LD uvijek nanovo generise prilikom prenosa na     ***
+      *** diskete, ovo ne predstavlja problem.                             ***
+
+    * Objasnjenje:
+          Korisnik prilikom definisanja uslova, ukoliko zada sve radne
+      jedinice, dobija mogucnost da se opredijeli da li da prikaze razlozeno
+      po radnim jedinicama za radnika. Odgovor se smjesta u varijablu
+      <cRazdvoji>.
+          Ovaj upit nije omogucen ukoliko se unese radna jedinica.
+          Koristi se isti algoritam, s tim da se rezultati smjestaju u
+      bazu, jer nisam htio eksperimentisati sa nizovima.

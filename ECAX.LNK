@@ -1,0 +1,26 @@
+BLINKER EXE COMPRESS
+BLINKER EXE EXT
+
+NODEFlib
+
+blinker incremental off
+blinker exe CLIPPER F:90
+
+stack 7168
+
+BEGINAREA
+fi   e.obj
+fi   sifre.obj
+fi   fions.obj
+fi   izvj.obj
+fi   izvj2.obj
+fi   unos.obj
+fi   krediti.obj
+fi   specif.obj
+ENDAREA
+
+search p:\blinker\lib\blxclp52.lib
+
+output LD.EXE
+
+@p:\clp52\lib\ecax.lnk

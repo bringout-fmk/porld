@@ -1,0 +1,41 @@
+                                      L  D
+                             modul za obracun plata
+                             **********************
+    30.09.1998.   Ferhat
+    Oznaka verzije nakon ispravke: 01.46
+
+    * Fajl: E.PRG
+    * Funkcija/procedura: NaDiskete()
+    *                     SaDisketa()
+
+    * Opis izmjene:
+          Ukljuüen je prenos podataka o kreditima koji su dodijeljeni
+      radnicima u toku mjeseca na diskete, kao i povrat sa disketa.
+
+    * Uvedeni novi fajlovi:
+      1. _RADKR    - prenosna datoteka za RADKR
+      2. _KRED     - prenosna datoteka za KRED
+                     ovaj DBF ima nakacen indeks _KREDi1 / KRED (5.0/5.2)
+      Nijedan od fajlova NIJE UKLJUCEN u ILD.
+
+    * Objasnjenje:
+          Prenose se podaci o kreditima za tekuci mjesec (a ne svi podaci o
+      kreditima). Ovaj sistem je dovoljan da bi se napravila rekapitulacija
+      na glavnoj masini, kao i da bi se mogli generisati virmani.
+          Prenose se i podaci o kreditorima, i tako da se smatra da su podaci
+      na polaznoj masini (onoj na kojoj se prenos na diskete vrsi) tacni.
+      Shodno tome, ukoliko postoji kreditor na glavnoj masini, njegovi se
+      podaci prepisuju onim sto se donese s polazne.
+
+          Nedostatak ove metode je da se na glavnoj masini nema kompletan
+      pregled kredita, no on je uvijek dostupan na polaznoj.
+
+
+    NAPOMENA:
+    **************************************
+
+        Algoritam prenosa bi, kad se vec ovako radi, trebao ukljuciti i
+    ostale datoteke vezane za obracun plate, kao sto su datoteke: TIPPR,
+    RJ, DOPR, POR. Naime, vrlo se lako moze desiti da masine ne budu
+    sinhronizovane, sto bi prouzrocilo gresku o obradi, odnosno izvjesta-
+    vanju.

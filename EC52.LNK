@@ -1,0 +1,20 @@
+#NODEFAULT
+
+BLINKER EXECUTABLE COMPRESS
+blinker exe CLIPPER F:90
+
+STACK 7168
+#STACK 8192
+
+BEGINAREA
+fi   e.obj
+fi   sifre.obj
+fi   fions.obj
+fi   izvj.obj
+fi   izvj2.obj
+fi   unos.obj
+fi   krediti.obj
+fi   specif.obj
+ENDAREA
+
+@p:\clp52\lib\ec52.lnk

@@ -1,0 +1,1 @@
+rmake e /DC52 /DCPOR /DEXT /DPROBA

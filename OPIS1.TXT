@@ -1,0 +1,27 @@
+                                      L  D
+                             modul za obracun plata
+                             **********************
+    30.09.1998.   Ferhat
+    Oznaka verzije nakon ispravke: 01.46
+
+    * Fajl: KREDITI.PRG
+    * Funkcija/procedura: LKred()
+
+    * Opis izmjene:
+          Omuguceno je da se iz pregleda izbace (ne prikazu) korisnici
+      kredita koji su ga otplatili.
+
+    * Uvedeni novi fajlovi: N E M A
+
+    * Objasnjenje:
+          Uvedena je nova varijabla u masku sa upitom (cAktivni) pomocu koje
+      se korisnik izjasnjava zeli li da mu se prikazu i otplaceni krediti.
+          Ukoliko ova varijabla ima vrijednost "D", algoritam prvo provjeri
+      da li je ubiljezeno da je kredit otplacen (da li je suma <Iznos>
+      jednaka sumi <Placeno>).
+          Algoritam ce prikazati i kredite koji su otplaceni, a koji se
+      okoncavaju u godini/mjesecu datim sa <gGodina> i <gMjesec> - oni koji
+      se definisu na startu, odnosno parametrima.
+
+          Ukoliko se zadovolje gornji uslovi, algoritam se vraca na pocetni
+      slog i dalje nastavlja sa ranije ugradjenim algoritmom.
