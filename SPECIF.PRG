@@ -563,7 +563,15 @@ O_RADN
  UzmiIzIni(cIniName,'Varijable','O18I', FormNum2(nPom,16,gPici2), 'WRITE')
 
  // neto za isplatu  = neto  + nPorOlaksice
- nPom := nUNETO + nBolPreko + nPorOlaksice - nObustave
+ // -----------------------------------------
+ // varijanta D - specificno za FEB jer treba da izbazi bol.preko.42
+ // dana iz neta za isplatu na specifikaciji, vec je uracunat u netu.
+
+ if IzFmkIni('LD','BolPreko42IzbaciIz19','N',KUMPATH)=='D'
+    nPom := nUNETO + nPorOlaksice - nObustave
+ else
+    nPom := nUNETO + nBolPreko + nPorOlaksice - nObustave
+ endif
  UzmiIzIni(cIniName,'Varijable','N19I', FormNum2(nPom,16,gPici2), 'WRITE')
 
  // PIO iz + PIO na placu
