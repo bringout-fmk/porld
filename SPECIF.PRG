@@ -1409,6 +1409,7 @@ cIdRadn:=space(6)
 cStrSpr:=space(3)
 cOpsSt:=space(4)
 cOpsRad :=space(4)
+cVrPosla:=SPACE(2)
 
 qqRJ:=SPACE(60)
 
@@ -1427,6 +1428,7 @@ do while .t.
  @ m_x+ 4, m_y+ 2 SAY "Godina: "  GET  cGodina  pict "9999"
  @ m_x+ 6, m_y+ 2 SAY "Opstina stanovanja: "  GET  cOpsSt pict "@!" valid empty(cOpsSt) .or. P_Ops(@cOpsSt)
  @ m_x+ 7, m_y+ 2 SAY "Opstina rada:       "  GET  cOpsRad  pict "@!" valid empty(cOpsRad) .or. P_Ops(@cOpsRad)
+ @ m_x+ 8, m_y+ 2 SAY "Vrsta posla :       "  GET  cVrPosla  pict "@!"
  @ m_X+10, m_y+ 2 SAY "Ukljuceno ostranicavanje ? (D/N)" GET gOstr VALID gOstr$"DN" PICT "@!"
  @ m_X+10, m_y+38 SAY "Tip tabele (0/1/2)" GET gTabela VALID gTabela<3.and.gTabela>=0 PICT "9"
  read; clvbox(); ESC_BCR
@@ -1444,7 +1446,7 @@ SELECT LD
 Box(,2,30)
   nSlog:=0; nUkupno:=RECCOUNT2()
   cSort1 := "IDSTRSPR"
-  cFilt  := aUsl1+" .and. cGodina==GODINA .and."+IF(cMjesec<>cMjesecdo," cMjesec<=MJESEC .and. cMjesecDo>=MJESEC"," cMjesec==MJESEC")+" .and. ImaUOps(cOpsSt,cOpsRad)"
+  cFilt  := aUsl1+" .and. cGodina==GODINA .and."+IF(cMjesec<>cMjesecdo," cMjesec<=MJESEC .and. cMjesecDo>=MJESEC"," cMjesec==MJESEC")+" .and. ImaUOps(cOpsSt,cOpsRad) " + IIF(cVrPosla=="  ",""," .and. cVrPosla==IDVPOSLA")
   if lViseObr .and. !empty(cObracun)
     cFilt += ( ".and. OBR==" + cm2str(cObracun) )
   endif
