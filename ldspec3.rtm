@@ -11,7 +11,7 @@ object ppReport: TppReport
   PrinterSetup.mmPaperHeight = 297000
   PrinterSetup.mmPaperWidth = 210000
   PrinterSetup.PaperSize = 9
-  Template.FileName = 'C:\sigma\LDSPEC.RTM'
+  Template.FileName = 'C:\re\LD\ldspec3.rtm'
   Template.Format = ftASCII
   Units = utMillimeters
   AfterPrint = ppReportPreviewFormClose
@@ -2343,7 +2343,7 @@ object ppReport: TppReport
       mmHeight = 3969
       mmLeft = 90752
       mmTop = 15081
-      mmWidth = 62971
+      mmWidth = 62442
       BandType = 4
       mmBottomOffset = 0
       mmOverFlowOffset = 0
@@ -2367,7 +2367,7 @@ object ppReport: TppReport
       mmHeight = 3969
       mmLeft = 114036
       mmTop = 32808
-      mmWidth = 39423
+      mmWidth = 39158
       BandType = 4
       mmBottomOffset = 0
       mmOverFlowOffset = 0
@@ -2437,7 +2437,7 @@ object ppReport: TppReport
       mmHeight = 4763
       mmLeft = 152400
       mmTop = 48154
-      mmWidth = 20902
+      mmWidth = 20373
       BandType = 4
       mmBottomOffset = 0
       mmOverFlowOffset = 0
@@ -3588,7 +3588,7 @@ object ppReport: TppReport
       mmHeight = 3969
       mmLeft = 90223
       mmTop = 21696
-      mmWidth = 40217
+      mmWidth = 43656
       BandType = 4
       mmBottomOffset = 0
       mmOverFlowOffset = 0
@@ -3612,12 +3612,30 @@ object ppReport: TppReport
       mmHeight = 4233
       mmLeft = 133086
       mmTop = 21696
-      mmWidth = 20373
+      mmWidth = 20108
       BandType = 4
       mmBottomOffset = 0
       mmOverFlowOffset = 0
       mmStopPosition = 0
       mmLeading = 0
+    end
+    object ppLine78: TppLine
+      UserName = 'Line14'
+      Weight = 0.75
+      mmHeight = 1058
+      mmLeft = 127265
+      mmTop = 25929
+      mmWidth = 4763
+      BandType = 4
+    end
+    object ppLine79: TppLine
+      UserName = 'Line79'
+      Weight = 0.75
+      mmHeight = 1588
+      mmLeft = 127265
+      mmTop = 21167
+      mmWidth = 4763
+      BandType = 4
     end
   end
   object ppFooterBand1: TppFooterBand

@@ -224,16 +224,19 @@ O_RADN
 
  cIniName:=EXEPATH+'proizvj.ini'
 
-
+ //
+ // Radi DRB6 iskoristio f-ju Razrijedi()
+ //   npr.:    string  ->  s t r i n g
+ //
  UzmiIzIni(cIniName,'Varijable',"NAZISJ", cIspl1+", "+cIspl2 ,'WRITE')
  UzmiIzIni(cIniName,'Varijable',"NOPU", cNoPU ,'WRITE')
- UzmiIzIni(cIniName,'Varijable',"GOD",str(nGodina,4),'WRITE')
- UzmiIzIni(cIniName,'Varijable',"MJ",strtran(str(nMjesec,2)," ","0"),'WRITE')
+ UzmiIzIni(cIniName,'Varijable',"GOD",Razrijedi(str(nGodina,4)),'WRITE')
+ UzmiIzIni(cIniName,'Varijable',"MJ",Razrijedi(strtran(str(nMjesec,2)," ","0")),'WRITE')
  UzmiIzIni(cIniName,'Varijable',"BRRAC",cIspl3,'WRITE')
- UzmiIzIni(cIniName,'Varijable',"MATBR",cMatBR,'WRITE')
- UzmiIzIni(cIniName,'Varijable',"PORDBR",cPorDBR,'WRITE')
- UzmiIzIni(cIniName,'Varijable',"SBR",cSBR,'WRITE')
- UzmiIzIni(cIniName,'Varijable',"SPBR",cSPBR,'WRITE')
+ UzmiIzIni(cIniName,'Varijable',"MATBR",Razrijedi(cMatBR),'WRITE')
+ UzmiIzIni(cIniName,'Varijable',"PORDBR",Razrijedi(cPorDBR),'WRITE')
+ UzmiIzIni(cIniName,'Varijable',"SBR",Razrijedi(cSBR),'WRITE')
+ UzmiIzIni(cIniName,'Varijable',"SPBR",Razrijedi(cSPBR),'WRITE')
  UzmiIzIni(cIniName,'Varijable',"DATISPL",DTOC(dDatIspl),'WRITE')
 
 
@@ -1614,6 +1617,24 @@ PROCEDURE PoDoIzSez(cG,cM)
 
   SELECT (nArr)
 RETURN
+
+*************************************************************
+FUNCTION Razrijedi (cStr)
+*
+*   Razrijedi (cStr) --> cStrRazr
+*      Ubaci u string, izmedju slova, SPACE()
+*
+*************************************************************
+LOCAL cRazrStr, nLenM1, nCnt
+cStr := ALLTRIM (cStr)
+nLenM1 := LEN (cStr) - 1
+cRazrStr := ""
+FOR nCnt := 1 TO nLenM1
+  cRazrStr += SUBSTR (cStr, nCnt, 1) + " "
+NEXT
+cRazrStr += RIGHT (cStr, 1)
+RETURN (cRazrStr)
+
 
 
 FUNC ASezona2(cPath,cG,cFajl)

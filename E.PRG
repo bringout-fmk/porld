@@ -6,7 +6,7 @@ public gModul:="LD", gGlBaza:="LD.DBF"
 #include "ini0.ch"
 #endif
 
-PUBLIC cVer:='02.68m'
+PUBLIC cVer:='02.69s'
 
 
 #ifdef CAX
