@@ -103,7 +103,13 @@ O_RADN
  cMatBR :=  padr(cMatBr,13) ; cPorDBR := Padr(cPorDBR,8)
  cNOPU := space(10)  // broj koji dodjeljuje poreska uprava
  dDatIspl := date()
- cSBR:=padr(cSBR,8)
+
+ if IzFmkIni('LD','StatBroj9mjesta','N',KUMPATH)=='D'
+   cSBR:=padr(cSBR,9)
+ else
+   cSBR:=padr(cSBR,8)
+ endif
+
  cSPBR:=padr(cSPBR,4)
 
 
