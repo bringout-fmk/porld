@@ -6,16 +6,16 @@ public gModul:="LD", gGlBaza:="LD.DBF"
 #include "ini0.ch"
 #endif
 
-PUBLIC cVer:='02.65s'
+PUBLIC cVer:='02.65mb'
 
 
 #ifdef CAX
-PUBLIC cNaslov:="LD:LAN AX, 06.96-01.02"
+PUBLIC cNaslov:="LD:LAN AX, 06.96-02.02"
 #else
 #ifdef EXT
-PUBLIC cNaslov:="LD:LAN CDX EXT, 06.96-01.02"
+PUBLIC cNaslov:="LD:LAN CDX EXT, 06.96-02.02"
 #else
-PUBLIC cNaslov:="LD:LAN CDX, 06.96-01.02"
+PUBLIC cNaslov:="LD:LAN CDX, 06.96-02.02"
 #endif
 #endif
 
@@ -64,6 +64,8 @@ endif
 select radn
 use
 endif
+
+PUBLIC gSQL:="N"
 
 O_SIFK
 set order to tag "ID2"

@@ -7,12 +7,12 @@
 
 #include "ini0c52.ch"
 
-PUBLIC cVer:='02.32m'
+PUBLIC cVer:='02.32mb'
 
 #ifdef C52
-PUBLIC cNaslov:="LD:Install CDX, 06.96-03.01"
+PUBLIC cNaslov:="LD:Install CDX, 06.96-02.02"
 #else
-PUBLIC cNaslov:="LD:Install AX, 06.96-03.01"
+PUBLIC cNaslov:="LD:Install AX, 06.96-02.02"
 #endif
 
 #ifdef CPOR
