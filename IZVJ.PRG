@@ -3301,6 +3301,9 @@ ELSE
 ENDIF
 
 nPorOl:=nUPorOl:=0
+
+aNetoMj:={}
+
 do while !eof() .and. eval(bUSlov)           // vrti se u bazi LD.DBF *******
 
  if lViseObr .and. EMPTY(cObracun)
@@ -3437,6 +3440,21 @@ do while !eof() .and. eval(bUSlov)           // vrti se u bazi LD.DBF *******
  nUNeto+=_UNeto  // ukupno neto iznos
  nUIznos+=_UIznos  // ukupno iznos
  nUOdbici+=_UOdbici  // ukupno odbici
+
+ IF cMjesec<>cMjesecDo
+   nPom:=ASCAN(aNetoMj,{|x| x[1]==mjesec})
+   IF nPom>0
+     aNetoMj[nPom,2] += _uneto
+     aNetoMj[nPom,3] += _usati
+   ELSE
+     nTObl:=SELECT()
+     nTRec := PAROBR->(RECNO())
+     ParObr(mjesec,IF(lViseObr,cObracun,),IF(!fSvi,cIdRj,))      // samo pozicionira bazu PAROBR na odgovaraju†i zapis
+     AADD(aNetoMj,{mjesec,_uneto,_usati,PAROBR->k3,PAROBR->k1})
+     SELECT PAROBR; GO (nTRec)
+     SELECT (nTObl)
+   ENDIF
+ ENDIF
 
  IF RADN->isplata=="TR"  // isplata na tekuci racun
    Rekapld( "IS_"+RADN->idbanka , cgodina , cmjesecDo ,;
@@ -4260,7 +4278,41 @@ if nUSati==0; nUSati:=999999; endif
    alltrim(transform(nUNeto/nUsati,gpici)),"*",alltrim(transform(parobr->k1,"999")),"=",;
    alltrim(transform(nUneto/nUsati*parobr->k1,gpici))
 
-ENDIF // cMjesec==cMjesecDo // za viçe mjeseci nema prikaza poreza i doprinosa
+ELSE // cMjesec==cMjesecDo // za viçe mjeseci nema prikaza poreza i doprinosa
+  // ali se mo§e dobiti bruto osnova i prosjeŸni neto po satu
+  // --------------------------------------------------------
+  ASORT(aNetoMj,,,{|x,y| x[1]<y[1]})
+  ?
+  ?     "MJESEC³  UK.NETO  ³UK.SATI³KOEF.BRUTO³FOND SATI³BRUTO OSNOV³PROSJ.NETO "
+  ?     " (A)  ³    (B)    ³  (C)  ³   (D)    ³   (E)   ³(B)*(D)/100³(E)*(B)/(C)"
+  ? ms:="ÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄ"
+  nT1:=nT2:=nT3:=nT4:=nT5:=0
+  FOR i:=1 TO LEN(aNetoMj)
+    ? STR(aNetoMj[i,1],4,0) +". ³"+;
+      TRANS(aNetoMj[i,2],gPicI) +"³"+;
+      STR(aNetoMj[i,3],7) +"³"+;
+      TRANS(aNetoMj[i,4],"999.99999%") +"³"+;
+      STR(aNetoMj[i,5],9) +"³"+;
+      TRANS(ROUND2(aNetoMj[i,2]*aNetoMj[i,4]/100,gZaok2),gPicI) +"³"+;
+      TRANS(aNetoMj[i,5]*aNetoMj[i,2]/aNetoMj[i,3],gPicI)
+      nT1 += aNetoMj[i,2]
+      nT2 += aNetoMj[i,3]
+      nT3 += aNetoMj[i,5]
+      nT4 += ROUND2(aNetoMj[i,2]*aNetoMj[i,4]/100,gZaok2)
+      // nT5 += aNetoMj[i,5]*aNetoMj[i,2]/aNetoMj[i,3]
+  NEXT
+  // nT5 := nT5/LEN(aNetoMj)
+  nT5 := nT3*nT1/nT2
+  ? ms
+  ?     "UKUPNO³"+;
+      TRANS(nT1,gPicI) +"³"+;
+      STR(nT2,7) +"³"+;
+      "          "+"³"+;
+      STR(nT3,9) +"³"+;
+      TRANS(nT4,gPicI) +"³"+;
+      TRANS(nT5,gPicI)
+
+ENDIF
 
 ?
 10CPI
