@@ -6,7 +6,7 @@ public gModul:="LD", gGlBaza:="LD.DBF"
 #include "ini0.ch"
 #endif
 
-PUBLIC cVer:='02.66m'
+PUBLIC cVer:='02.67m'
 
 
 #ifdef CAX
@@ -1847,4 +1847,7 @@ ELSE
 ENDIF
 
 CLOSERET
+
+FUNC Reindex_all()
+RETURN (NIL)
 

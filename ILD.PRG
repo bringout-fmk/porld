@@ -872,3 +872,8 @@ PROC TestViseObr()
 RETURN
 
 function sklonisezonu()
+
+function O_log()
+
+function reindex_all()
+

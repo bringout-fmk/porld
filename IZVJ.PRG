@@ -7,7 +7,7 @@
 local izb:=1
 
 #ifndef CPOR
-private opc[22], h[22]
+private opc[23], h[23]
 
 opc[ 1]:="1. pregled plata                               "
 opc[ 2]:="2. pregled odredjenog primanja"
@@ -31,6 +31,7 @@ opc[19]:="J. specif.prosjecnog neta po strucnoj spremi"
 opc[20]:="K. lista radnika sa netom po opst.stanovanja"
 opc[21]:="L. pregled obracunatih doprinosa"
 opc[22]:="M. specifikacija primanja po RJ"
+opc[23]:="N. rekapitulacija tekucih racuna"
 
 #else
 private opc[15]
@@ -114,6 +115,8 @@ do while .t.
           IzObDop()    // izvjestaj o obracunatim doprinosima
         case Izb==22
           SpecPrimRJ()
+        case Izb==23
+          RekTekRac()
      endcase
 enddo
 #else

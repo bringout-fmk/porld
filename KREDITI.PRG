@@ -552,6 +552,8 @@ do case
     #ifdef CPOR
      if sigmaSif("SIGMAXXX")
        scatter()
+       _pgodina:=0
+       _pmjesec:=0
        Box(,5,50)
          ++_mjesec
          @ m_x+1,m_y+2 SAY "Rucno dodavanje rate !"

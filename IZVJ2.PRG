@@ -1435,3 +1435,523 @@ FUNC FFor8()
  SKIP -1
 RETURN .t.
 
+
+
+
+// ----------------
+//  REKapitulacija
+//  TEKucih
+//  RACuna
+// ----------------
+PROC RekTekRac()
+local nC1:=20, i
+local cTPNaz, nKrug:=1
+
+cIdRj:=gRj; cmjesec:=gMjesec; cGodina:=gGodina
+cObracun:=gObracun
+cMjesecDo:=cMjesec
+
+qqPrikPrim:=""
+
+O_POR
+O_DOPR
+O_PAROBR
+O_RJ
+O_RADN
+O_STRSPR
+O_KBENEF
+O_VPOSLA
+O_OPS
+O_RADKR
+O_KRED
+
+cIdBanke:=SPACE(LEN(id))
+
+O_LD
+
+cIdRadn:=space(_LR_); cStrSpr:=space(3); cOpsSt:=space(4); cOpsRad :=space(4)
+
+qqRJ:=SPACE(60)
+Box(,12,75)
+
+O_PARAMS
+Private cSection:="4",cHistory:=" ",aHistory:={}
+RPar("pp",@qqPrikPrim)
+
+qqPrikPrim := PADR(qqPrikPrim,80)
+
+DO WHILE .t.
+ @ m_x+3,m_y+2 SAY "Radne jedinice: "  GET  qqRJ PICT "@!S25"
+ @ m_x+4,m_y+2 SAY "Za mjesece od:"  GET  cmjesec  pict "99" VALID {|| cMjesecDo:=cMjesec,.t.}
+ @ m_x+4,col()+2 SAY "do:"  GET  cMjesecDo  pict "99" VALID cMjesecDo>=cMjesec
+ if lViseObr
+   @ m_x+4,col()+2 SAY "Obracun: " GET cObracun WHEN HelpObr(.t.,cObracun) VALID ValObr(.t.,cObracun)
+ endif
+ @ m_x+ 5,m_y+2 SAY "Godina: "  GET  cGodina  pict "9999"
+ @ m_x+ 7,m_y+2 SAY "Strucna sprema:     "  GET  cStrSpr pict "@!" valid empty(cStrSpr) .or. P_StrSpr(@cStrSpr)
+ @ m_x+ 8,m_y+2 SAY "Opstina stanovanja: "  GET  cOpsSt pict "@!" valid empty(cOpsSt) .or. P_Ops(@cOpsSt)
+ @ m_x+ 9,m_y+2 SAY "Opstina rada:       "  GET  cOpsRad  pict "@!" valid empty(cOpsRad) .or. P_Ops(@cOpsRad)
+ @ m_x+10,m_y+2 SAY "Banka (prazno-sve): "  GET  cIdBanke pict "@!" valid empty(cIdBanke) .or. P_Kred(@cIdBanke)
+ @ m_x+11,m_y+2 SAY "Primanja za prikaz (npr.06;22;23;) "  GET  qqPrikPrim pict "@S30"
+
+ read; clvbox(); ESC_BCR
+ aUsl1:=Parsiraj(qqRJ,"IDRJ")
+ aUsl2:=Parsiraj(qqRJ,"ID")
+ if aUsl1<>NIL.and.aUsl2<>NIL; exit; endif
+ENDDO
+
+SELECT PARAMS
+qqPrikPrim:=TRIM(qqPrikPrim)
+WPar("pp",qqPrikPrim)
+SELECT PARAMS; USE
+
+BoxC()
+
+if lViseObr
+  O_TIPPRN
+else
+  O_TIPPR
+endif
+
+SELECT LD
+
+if lViseObr
+  cObracun:=TRIM(cObracun)
+else
+  cObracun:=""
+endif
+
+// CREATE_INDEX("LDi2","str(godina)+str(mjesec)+idradn","LD")
+set order to tag (TagVO("2"))
+
+PRIVATE cFilt1:=""
+cFilt1 := ".t." + IF(EMPTY(cStrSpr),"",".and.IDSTRSPR=="+cm2str(cStrSpr))+;
+		  IF(EMPTY(qqRJ),"",".and."+aUsl1)
+
+IF cMjesec!=cMjesecDo
+  cFilt1 := cFilt1 + ".and.mjesec>="+cm2str(cMjesec)+;
+                     ".and.mjesec<="+cm2str(cMjesecDo)+;
+                     ".and.godina="+cm2str(cGodina)
+ENDIF
+
+if lViseObr
+  cFilt1 += ".and. OBR="+cm2str(cObracun)
+endif
+
+cFilt1 := STRTRAN(cFilt1,".t..and.","")
+
+IF cFilt1==".t."
+  SET FILTER TO
+ELSE
+  SET FILTER TO &cFilt1
+ENDIF
+
+IF cMjesec==cMjesecDo
+  seek str(cGodina,4)+str(cmjesec,2)+cObracun
+  EOF CRET
+ELSE
+  GO TOP
+ENDIF
+
+PoDoIzSez(cGodina,cMjesecDo)
+
+nStrana:=0
+m:="------------------------  ----------------              -------------------"
+
+aDbf:={   {"ID"    ,"C", 1,0},;
+          {"IDOPS" ,"C", 4,0},;
+          {"IZNOS" ,"N",25,4},;
+          {"IZNOS2","N",25,4},;
+          {"LJUDI" ,"N", 10,0};
+      }
+
+//id- 1 opsstan
+//id- 2 opsrad
+DBCREATE2(PRIVPATH+"opsld",aDbf)
+
+select(F_OPSLD) ; usex (PRIVPATH+"opsld")
+INDEX ON ID+IDOPS tag "1"
+index ON  BRISANO TAG "BRISAN"
+use
+
+// napraviti   godina, mjesec, idrj, cid , iznos1, iznos2
+aDbf:={    {"GODINA"     ,  "C" , 4, 0 } ,;
+           {"MJESEC"     ,  "C" , 2, 0 } ,;
+           {"ID"         ,  "C" , 30, 0} ,;
+           {"opis"       ,  "C" , 20, 0} ,;
+           {"opis2"      ,  "C" , 35, 0} ,;
+           {"iznos1"     ,  "N" , 25, 4} ,;
+           {"iznos2"     ,  "N" , 25, 4} ;
+        }
+  AADD( aDbf , {"idpartner"  ,  "C" ,  6, 0} )
+
+DBCREATE2(KUMPATH+"REKLD",aDbf)
+
+select (F_REKLD); usex (KUMPATH+"rekld")
+index ON  BRISANO+"10" TAG "BRISAN"
+index on  godina+mjesec+id  tag "1"
+set order to tag "1"
+use
+
+O_REKLD; O_OPSLD
+select ld
+
+START PRINT CRET
+10CPI
+
+IF IzFMKIni("LD","RekapitulacijaGustoPoVisini","N",KUMPATH)=="D"
+  lGusto:=.t.
+  gRPL_Gusto()
+  nDSGusto:=VAL(IzFMKIni("RekapGustoPoVisini","DodatnihRedovaNaStranici","11",KUMPATH))
+  gPStranica+=nDSGusto
+ELSE
+  lGusto:=.f.
+  nDSGusto:=0
+ENDIF
+
+ParObr(cmjesec,IF(lViseObr,cObracun,),)      // samo pozicionira bazu PAROBR na odgovaraju†i zapis
+
+private aRekap[cLDPolja,2]
+
+for i:=1 to cLDPolja
+  aRekap[i,1]:=0
+  aRekap[i,2]:=0
+next
+
+nT1:=nT2:=nT3:=nT4:=0
+nUNeto:=0
+nUIznos:=nUSati:=nUNeto:=nUOdbici:=nUOdbiciP:=nUOdbiciM:=0
+nLjudi:=0
+
+private aNeta:={}
+
+select ld
+
+IF cMjesec!=cMjesecDo
+   private bUslov:={|| cgodina==godina .and. mjesec>=cmjesec .and. mjesec<=cMjesecDo .and. IF(lViseObr,obr=cObracun,.t.) }
+ELSE
+   private bUslov:={|| cgodina==godina .and. cmjesec=mjesec .and. IF(lViseObr,obr=cObracun,.t.) }
+ENDIF
+
+nPorOl:=nUPorOl:=0
+
+aNetoMj:={}
+
+do while !eof() .and. eval(bUSlov)           // vrti se u bazi LD.DBF *******
+
+ if lViseObr .and. EMPTY(cObracun)
+   ScatterS(godina,mjesec,idrj,idradn)
+ else
+   Scatter()
+ endif
+
+ select radn; hseek _idradn
+ select vposla; hseek _idvposla
+
+ if (!empty(copsst) .and. copsst<>radn->idopsst)  .or.;
+    (!empty(copsrad) .and. copsrad<>radn->idopsrad) .or.;
+    (!empty(cIdBanke) .and. cIdBanke<>radn->idbanka)
+   select ld
+   skip 1; loop
+ endif
+
+ select por; go top
+ nPor:=nPorOl:=0
+ do while !eof()  // datoteka por
+   PozicOps(POR->poopst)
+   IF !ImaUOp("POR",POR->id)
+     SKIP 1; LOOP
+   ENDIF
+   nPor+=round2(max(dlimit,iznos/100*_UNeto),gZaok2)
+   skip
+ enddo
+ if radn->porol<>0 .and. gDaPorOl=="D" .and. !Obr2_9() // poreska olaksica
+   if alltrim(cVarPorOl)=="2"
+     nPorOl:=RADN->porol
+   elseif alltrim(cVarPorol)=="1"
+     nPorOl:=round(parobr->prosld*radn->porol/100,gZaok)
+   else
+     nPorOl:= &("_I"+cVarPorol)
+   endif
+   if nPorOl>nPor // poreska olaksica ne moze biti veca od poreza
+     nPorOl:=nPor
+   endif
+   nUPorOl+=nPorOl
+ endif
+
+ //**** nafiluj datoteku OPSLD *********************
+ select ops; seek radn->idopsst
+ select opsld
+ seek "1"+radn->idopsst
+ if found()
+   replace iznos with iznos+_uneto, iznos2 with iznos2+nPorOl, ljudi with ljudi+1
+ else
+   append blank
+   replace id with "1", idops with radn->idopsst, iznos with _uneto,;
+                        iznos2 with iznos2+nPorOl, ljudi with 1
+ endif
+ seek "3"+ops->idkan
+ if found()
+   replace iznos with iznos+_uneto, iznos2 with iznos2+nPorOl, ljudi with ljudi+1
+ else
+   append blank
+   replace id with "3", idops with ops->idkan, iznos with _uneto,;
+                        iznos2 with iznos2+nPorOl, ljudi with 1
+ endif
+ seek "5"+ops->idn0
+ if found()
+   replace iznos with iznos+_uneto, iznos2 with iznos2+nPorOl, ljudi with ljudi+1
+ else
+   append blank
+   replace id with "5", idops with ops->idn0, iznos with _uneto,;
+                        iznos2 with iznos2+nPorOl, ljudi with 1
+ endif
+ select ops; seek radn->idopsrad
+ select opsld
+ seek "2"+radn->idopsrad
+ if found()
+   replace iznos with iznos+_uneto, iznos2 with iznos2+nPorOl , ljudi with ljudi+1
+ else
+   append blank
+   replace id with "2", idops with radn->idopsrad, iznos with _uneto,;
+                        iznos2 with iznos2+nPorOl, ljudi with 1
+ endif
+ seek "4"+ops->idkan
+ if found()
+   replace iznos with iznos+_uneto, iznos2 with iznos2+nPorOl, ljudi with ljudi+1
+ else
+   append blank
+   replace id with "4", idops with ops->idkan, iznos with _uneto,;
+                        iznos2 with iznos2+nPorOl, ljudi with 1
+ endif
+ seek "6"+ops->idn0
+ if found()
+   replace iznos with iznos+_uneto, iznos2 with iznos2+nPorOl, ljudi with ljudi+1
+ else
+   append blank
+   replace id with "6", idops with ops->idn0, iznos with _uneto,;
+                        iznos2 with iznos2+nPorOl, ljudi with 1
+ endif
+ select ld
+ //*************************
+
+
+
+ nPom:=ASCAN(aNeta,{|x| x[1]==vposla->idkbenef})
+ if nPom==0
+    AADD(aNeta,{vposla->idkbenef,_UNeto})
+ else
+    aNeta[nPom,2]+=_UNeto
+ endif
+
+ for i:=1 to cLDPolja
+  cPom:=padl(alltrim(str(i)),2,"0")
+  select tippr; seek cPom; select ld
+    aRekap[i,1]+=_s&cPom  // sati
+  nIznos:=_i&cPom
+    aRekap[i,2]+=nIznos  // iznos
+  if tippr->uneto=="N" .and. nIznos<>0
+    if nIznos>0
+      nUOdbiciP+=nIznos
+    else
+      nUOdbiciM+=nIznos
+    endif
+  endif
+ next
+
+ ++nLjudi
+ nUSati+=_USati   // ukupno sati
+ nUNeto+=_UNeto  // ukupno neto iznos
+
+ nUIznos+=_UIznos  // ukupno iznos
+
+ nUOdbici+=_UOdbici  // ukupno odbici
+
+ IF cMjesec<>cMjesecDo
+   nPom:=ASCAN(aNetoMj,{|x| x[1]==mjesec})
+   IF nPom>0
+     aNetoMj[nPom,2] += _uneto
+     aNetoMj[nPom,3] += _usati
+   ELSE
+     nTObl:=SELECT()
+     nTRec := PAROBR->(RECNO())
+     ParObr(mjesec,IF(lViseObr,cObracun,),)      // samo pozicionira bazu PAROBR na odgovaraju†i zapis
+     AADD(aNetoMj,{mjesec,_uneto,_usati,PAROBR->k3,PAROBR->k1})
+     SELECT PAROBR; GO (nTRec)
+     SELECT (nTObl)
+   ENDIF
+ ENDIF
+
+ IF RADN->isplata=="TR"  // isplata na tekuci racun
+   Rekapld( "IS_"+RADN->idbanka , cgodina , cmjesecDo ,;
+            _UIznos , 0 , RADN->idbanka , RADN->brtekr , RADNIK , .t. )
+ ENDIF
+
+ select ld
+ skip
+
+enddo                                        // vrti se u bazi LD.DBF *******
+
+if nLjudi==0
+  nLjudi:=9999999
+endif
+B_ON
+?? "LD: Rekapitulacija primanja"
+B_OFF
+if !empty(cstrspr)
+ ?? " za radnike strucne spreme ",cStrSpr
+endif
+
+? "Mjesto isplate: "
+if !empty(cIdBanke)
+ ?? cIdBanke
+else
+ ?? "SVA"
+endif
+
+if !empty(cOpsSt)
+ ? "Opstina stanovanja:",cOpsSt
+endif
+if !empty(cOpsRad)
+ ? "Opstina rada:",cOpsRad
+endif
+
+ select rj
+ ? "Obuhvacene radne jedinice: "
+ IF !EMPTY(qqRJ)
+  SET FILTER TO &aUsl2
+  GO TOP
+  DO WHILE !EOF()
+   ?? id+" - "+naz
+   ? SPACE(27)
+   SKIP 1
+  ENDDO
+ ELSE
+  ?? "SVE"
+  ?
+ ENDIF
+ B_ON
+ IF cMjesec==cMjesecDo
+   ? "Firma:",gNFirma,"  Mjesec:",str(cmjesec,2)+IspisObr()
+   ?? "    Godina:", str(cGodina,4)
+   B_OFF
+   ? IF(gBodK=="1","Vrijednost boda:","Vr.koeficijenta:"), transform(parobr->vrbod,"99999.99999")
+ ELSE
+   ? "Firma:",gNFirma,"  Za mjesece od:",str(cmjesec,2),"do",str(cmjesecDo,2)+IspisObr()
+   ?? "    Godina:", str(cGodina,4)
+   B_OFF
+   // ? IF(gBodK=="1","Vrijednost boda:","Vr.koeficijenta:"), transform(parobr->vrbod,"99999.99999")
+ ENDIF
+ ?
+
+? m
+cUNeto:="D"
+for i:=1 to cLDPolja
+
+  If prow()>55+gPStranica
+    FF
+  endif
+
+  //********************* 90 - ke
+  cPom:=padl(alltrim(str(i)),2,"0")
+  _s&cPom:=aRekap[i,1]   // nafiluj ove varijable radi prora~una dodatnih stavki
+  _i&cPom:=aRekap[i,2]
+  //**********************
+
+  cPom:=padl(alltrim(str(i)),2,"0")
+  select tippr; seek cPom
+  if tippr->uneto=="N" .and. cUneto=="D"
+    cUneto:="N"
+    ? m
+    ? "NETO IZNOS :"; @ prow(),nC1+8  SAY  nUSati  pict gpics; ?? " sati"
+    @ prow(),60 SAY nUNeto pict gpici; ?? "",gValuta
+    // ****** radi 90 - ke
+    _UNeto:=nUNeto
+    _USati:=nUSati
+    //***********
+    ? m
+  endif
+
+
+  if tippr->(found()) .and. tippr->aktivan=="D" .and. (aRekap[i,2]<>0 .or. aRekap[i,1]<>0)
+            cTPNaz:=tippr->naz
+   IF tippr->id $ qqPrikPrim
+     ? tippr->id+"-"+cTPNaz
+     nC1:=pcol()
+     if tippr->fiksan $ "DN"
+       @ prow(),pcol()+8 SAY aRekap[i,1]  pict gpics; ?? " s"
+       @ prow(),60 say aRekap[i,2]      pict gpici
+     elseif tippr->fiksan=="P"
+       @ prow(),pcol()+8 SAY aRekap[i,1]/nLjudi pict "999.99%"
+       @ prow(),60 say aRekap[i,2]        pict gpici
+     elseif tippr->fiksan=="C"
+       @ prow(),60 say aRekap[i,2]        pict gpici
+     elseif tippr->fiksan=="B"
+         @ prow(),pcol()+8 SAY aRekap[i,1] pict "999999"; ?? " b"
+         @ prow(),60 say aRekap[i,2]      pict gpici
+     endif
+   ENDIF
+   IF cMjesec==cMjesecDo
+     Rekapld("PRIM"+tippr->id,cgodina,cmjesec,aRekap[i,2],aRekap[i,1])
+   ELSE
+     Rekapld("PRIM"+tippr->id,cgodina,cMjesecDo,aRekap[i,2],aRekap[i,1])
+   ENDIF
+
+  endif   // tippr aktivan
+
+next  // cldpolja
+
+? m
+?  "IZNOS ZA ISPLATU:";  @ prow(),60 SAY nUIznos pict gpici; ?? "",gValuta
+? m
+IF !lGusto
+  ?
+ENDIF
+
+// proizvoljni redovi pocinju sa "9"
+?
+select tippr; seek "9"
+do while !eof() .and. left(id,1)="9"
+  If prow()>55+gPStranica
+    FF
+  endif
+  ? tippr->id+"-"+tippr->naz
+  cPom:=tippr->formula
+  @ prow(),60 say round2(&cPom,gZaok2)      pict gpici
+  IF cMjesec==cMjesecDo
+    Rekapld("PRIM"+tippr->id,cgodina,cmjesec,round2(&cpom,gZaok2),0)
+  ELSE
+    Rekapld("PRIM"+tippr->id,cgodina,cMjesecDo,round2(&cpom,gZaok2),0)
+  ENDIF
+  skip
+  IF eof() .or. !left(id,1)="9"
+    ? m
+  ENDIF
+enddo
+
+
+?
+? "Izvrsena obrada na ",str(nLjudi,5),"radnika"
+
+?
+10CPI
+if prow()<62+gPStranica
+ nPom:=62+gPStranica-prow()
+ for i:=1 to nPom
+   ?
+ next
+endif
+?  PADC("     Obradio:                                 Direktor:    ",80)
+?
+?  PADC("_____________________                    __________________",80)
+?
+FF
+IF lGusto
+  gRPL_Normal()
+  gPStranica-=nDSGusto
+ENDIF
+END PRINT
+
+CLOSERET
+
+
