@@ -1400,22 +1400,20 @@ O_OPS
 
 O_LD
 
-cIdRj:=gRj; cmjesec:=gMjesec; cMjesecDo:=gMjesec
+cIdRj:=gRj
+cmjesec:=gMjesec
+cMjesecDo:=gMjesec
 cGodina:=gGodina
 cObracun:=gObracun
-gOstr:="D"; gTabela:=1
+gOstr:="D"
+gTabela:=1
 
 cIdRadn:=space(6)
 cStrSpr:=space(3)
 cOpsSt:=space(4)
 cOpsRad :=space(4)
-cVrPosla:=SPACE(2)
-
+qqVrPosla:=SPACE(30)
 qqRJ:=SPACE(60)
-
-// O_PARAMS
-// Private cSection:="4",cHistory:=" ",aHistory:={}
-// RPar("i4",@cMRad)
 
 Box(,11,70)
 do while .t.
@@ -1428,25 +1426,31 @@ do while .t.
  @ m_x+ 4, m_y+ 2 SAY "Godina: "  GET  cGodina  pict "9999"
  @ m_x+ 6, m_y+ 2 SAY "Opstina stanovanja: "  GET  cOpsSt pict "@!" valid empty(cOpsSt) .or. P_Ops(@cOpsSt)
  @ m_x+ 7, m_y+ 2 SAY "Opstina rada:       "  GET  cOpsRad  pict "@!" valid empty(cOpsRad) .or. P_Ops(@cOpsRad)
- @ m_x+ 8, m_y+ 2 SAY "Vrsta posla :       "  GET  cVrPosla  pict "@!"
+ @ m_x+ 8, m_y+ 2 SAY "Vrsta posla :       "  GET  qqVrPosla  pict "@!S25"
  @ m_X+10, m_y+ 2 SAY "Ukljuceno ostranicavanje ? (D/N)" GET gOstr VALID gOstr$"DN" PICT "@!"
  @ m_X+10, m_y+38 SAY "Tip tabele (0/1/2)" GET gTabela VALID gTabela<3.and.gTabela>=0 PICT "9"
- read; clvbox(); ESC_BCR
+ read
+ clvbox()
+ ESC_BCR
+
  aUsl1:=Parsiraj(qqRJ,"IDRJ")
  aUsl2:=Parsiraj(qqRJ,"ID")
- if aUsl1<>NIL.and.aUsl2<>NIL; exit; endif
+ aUsl3:=Parsiraj(qqVrPosla,"IDVPOSLA")
+
+ if aUsl1<>NIL .and. aUsl2<>NIL .and. aUsl3<>NIL
+     exit
+ endif
+
 enddo
 BoxC()
-
-// WPar("i4",cMRad)
-// select params; use
 
 SELECT LD
 
 Box(,2,30)
-  nSlog:=0; nUkupno:=RECCOUNT2()
-  cSort1 := "IDSTRSPR"
-  cFilt  := aUsl1+" .and. cGodina==GODINA .and."+IF(cMjesec<>cMjesecdo," cMjesec<=MJESEC .and. cMjesecDo>=MJESEC"," cMjesec==MJESEC")+" .and. ImaUOps(cOpsSt,cOpsRad) " + IIF(cVrPosla=="  ",""," .and. cVrPosla==IDVPOSLA")
+  nSlog:=0
+  nUkupno:=RECCOUNT2()
+  cSort1:="IDSTRSPR"
+  cFilt:=aUsl1+" .and. cGodina==GODINA .and."+IF(cMjesec<>cMjesecdo," cMjesec<=MJESEC .and. cMjesecDo>=MJESEC"," cMjesec==MJESEC")+" .and. ImaUOps(cOpsSt,cOpsRad) " + IIF(qqVrPosla=="",""," .and. " + aUsl3)
   if lViseObr .and. !empty(cObracun)
     cFilt += ( ".and. OBR==" + cm2str(cObracun) )
   endif
@@ -1500,6 +1504,8 @@ SELECT LD
     IF( EMPTY(cOpsSt) , "SVE" , Ocitaj(F_OPS,cOpsSt,"id+'-'+naz") )
 ? "Opstina rada       :",;
     IF( EMPTY(cOpsRad) , "SVE" , Ocitaj(F_OPS,cOpsRad,"id+'-'+naz") )
+? "Vrste posla        :",;
+    IF(EMPTY(qqVrPosla) , "SVE" , qqVrPosla)
 ?
 
 gaDodStavke:={}
