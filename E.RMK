@@ -89,8 +89,8 @@ LD.exe: e.obj         \
        krediti.obj    \
        specif.obj
   blinker @e$(o4).lnk file cld.lib  output ld.exe
-  del  t:\sigma\ld.exe
-  copy ld.exe t:\sigma
+  del  c:\sigma\ld.exe
+  copy ld.exe c:\sigma
 #else
 LD.exe: e.obj         \
        sifre.obj     \
@@ -101,6 +101,6 @@ LD.exe: e.obj         \
        krediti.obj    \
        specif.obj
   blinker @e$(o4).lnk output ld.exe
-  del  t:\sigma\ld.exe
-  copy ld.exe t:\sigma
+  del  c:\sigma\ld.exe
+  copy ld.exe c:\sigma
 #endif
