@@ -878,3 +878,6 @@ function O_log()
 function reindex_all()
 
 function o_nar()
+
+proc help2()
+

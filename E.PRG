@@ -6,16 +6,16 @@ public gModul:="LD", gGlBaza:="LD.DBF"
 #include "ini0.ch"
 #endif
 
-PUBLIC cVer:='02.67m'
+PUBLIC cVer:='02.68m'
 
 
 #ifdef CAX
-PUBLIC cNaslov:="LD:LAN AX, 06.96-02.02"
+PUBLIC cNaslov:="LD:LAN AX, 06.96-04.02"
 #else
 #ifdef EXT
-PUBLIC cNaslov:="LD:LAN CDX EXT, 06.96-02.02"
+PUBLIC cNaslov:="LD:LAN CDX EXT, 06.96-04.02"
 #else
-PUBLIC cNaslov:="LD:LAN CDX, 06.96-02.02"
+PUBLIC cNaslov:="LD:LAN CDX, 06.96-04.02"
 #endif
 #endif
 
@@ -36,7 +36,7 @@ OKumul(F_RADKR,KUMPATH,"RADKR",1,"D")
 
 UcitajParams()
 
-SetHF("LD.hlp")
+// SetHF("LD.hlp")
 
 SETKEY(K_SH_F1,{|| Calc()})
 

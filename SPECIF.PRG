@@ -856,8 +856,8 @@ RETURN (NIL)
 
 FUNCTION NazMjeseca(nMjesec)
  LOCAL aVrati:={"Januar","Februar","Mart","April","Maj","Juni","Juli",;
-                "Avgust","Septembar","Oktobar","Novembar","Decembar"}
-RETURN IF( nMjesec>0.and.nMjesec<13 , aVrati[nMjesec] , "" )
+                "Avgust","Septembar","Oktobar","Novembar","Decembar","UKUPNO"}
+RETURN IF( nMjesec>0.and.nMjesec<14 , aVrati[nMjesec] , "" )
 
 
 
@@ -1062,6 +1062,8 @@ PraviMTEMP()
 CLOSE ALL
 
 O_RJ
+O_STRSPR
+O_OPS
 O_RADN
 
 #ifdef CPOR
@@ -1205,7 +1207,7 @@ FOR i:=1 TO cLDPolja
 
       AADD(aKol, { IF((i-nKorekcija)==1,"TIP PRIMANJA","") , &cNPrim. , .f., "C", 25, 0, 2*(i-nKorekcija)-1, 1 } )
 
-      FOR j:=1 TO 12
+      FOR j:=1 TO 13
 
         cPomMI := "nSum["+ALLTRIM(STR(i-nKorekcija))+","+ALLTRIM(STR(j))+",1]"
         cPomMS := "nSum["+ALLTRIM(STR(i-nKorekcija))+","+ALLTRIM(STR(j))+",2]"
@@ -1232,7 +1234,7 @@ NEXT
 AADD(aKol, { "", {|| REPL("=",25)}, .f., "C", 25, 0, 2*(i-nKorekcija)-1, 1 } )
 
 AADD(aKol, { "", {|| "U K U P N O"    }, .f., "C", 25, 0, 2*(i-nKorekcija), 1 } )
-FOR j:=1 TO 12
+FOR j:=1 TO 13
   cPomMI := "nSum["+ALLTRIM(STR(i-nKorekcija))+","+ALLTRIM(STR(j))+",1]"
   cPomMS := "nSum["+ALLTRIM(STR(i-nKorekcija))+","+ALLTRIM(STR(j))+",2]"
 
@@ -1244,9 +1246,9 @@ NEXT
 Altd()
 
 nSumLen:=i-1-nKorekcija+1
-nSum:=ARRAY(nSumLen,12,2)
+nSum:=ARRAY(nSumLen,13,2)
 FOR k:=1 TO nSumLen
-  FOR j:=1 TO 12
+  FOR j:=1 TO 13
     FOR l:=1 TO 2
        nSum[k,j,l] := 0
     NEXT
@@ -1258,6 +1260,8 @@ GO TOP
 
 START PRINT CRET
 
+12CPI
+
 ?? space(gnLMarg); ?? "LD: Izvjestaj na dan",date()
 ? space(gnLMarg); IspisFirme("")
 ? space(gnLMarg); ?? "RJ: " + IF( EMPTY(cIdRJ) , "SVE" , cIdRJ )
@@ -1265,7 +1269,16 @@ START PRINT CRET
 IF EMPTY(cIdRadn)
  ?? "SVI"
 ELSE
- ?? cIdRadn+"-"+Ocitaj(F_RADN,cIdRadn,"trim(naz)+' ('+trim(imerod)+') '+ime")
+ SELECT (F_RADN); HSEEK cIdRadn
+ SELECT (F_STRSPR); HSEEK RADN->idstrspr
+ SELECT (F_OPS); HSEEK RADN->idopsst; cOStan:=naz
+ HSEEK RADN->idopsrad
+ SELECT (F_RADN)
+ ?? cIdRadn+"-"+trim(naz)+' ('+trim(imerod)+') '+ime
+ ? "Br.knjiz:",brknjiz,"","Mat.br:",matbr,"","R.mjesto:",rmjesto
+ ? "Min.rad:",kminrad,"","Str.spr:",STRSPR->naz,"","Opst.stan:",cOStan,"","Opst.rada:",OPS->naz
+ ? "Dat.zasn.rad.odnosa:",datod,"","Pol:",pol
+ SELECT MTEMP
 ENDIF
 
 #ifdef CPOR
@@ -1305,6 +1318,15 @@ FUNCTION FFor3()
               nSum[nSumLen,mjesec,1] += FIELDGET(nFPosI)
          nSum[i-nKorekcija,mjesec,2] := FIELDGET(nFPosS)
               nSum[nSumLen,mjesec,2] += FIELDGET(nFPosS)
+
+         // kolona 13.mjeseca tj."ukupno" iznos
+         nSum[i-nKorekcija,13,1] += FIELDGET(nFPosI)
+         // red ukupno kolone 13.mjeseca tj."sveukupno" iznos
+              nSum[nSumLen,13,1] += FIELDGET(nFPosI)
+         // kolona 13.mjeseca tj."ukupno" sati
+         nSum[i-nKorekcija,13,2] += FIELDGET(nFPosS)
+         // red ukupno kolone 13.mjeseca tj."sveukupno" sati
+              nSum[nSumLen,13,2] += FIELDGET(nFPosS)
        ELSE
          nKorekcija+=1
        ENDIF
