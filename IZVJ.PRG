@@ -3352,6 +3352,8 @@ nPorOl:=nUPorOl:=0
 
 aNetoMj:={}
 
+aUkTr:={}
+
 do while !eof() .and. eval(bUSlov)           // vrti se u bazi LD.DBF *******
 
  if lViseObr .and. EMPTY(cObracun)
@@ -3486,7 +3488,18 @@ do while !eof() .and. eval(bUSlov)           // vrti se u bazi LD.DBF *******
  ++nLjudi
  nUSati+=_USati   // ukupno sati
  nUNeto+=_UNeto  // ukupno neto iznos
+
+ cTR := IF( RADN->isplata$"TR#SK", RADN->idbanka,;
+                                   SPACE(LEN(RADN->idbanka)) )
+
+ IF LEN(aUkTR)>0 .and. ( nPomTR := ASCAN( aUkTr , {|x| x[1]==cTR} ) ) > 0
+   aUkTR[nPomTR,2] += _uiznos
+ ELSE
+   AADD( aUkTR , { cTR , _uiznos } )
+ ENDIF
+
  nUIznos+=_UIznos  // ukupno iznos
+
  nUOdbici+=_UOdbici  // ukupno odbici
 
  IF cMjesec<>cMjesecDo
@@ -3748,6 +3761,24 @@ for i:=1 to cLDPolja
 
 next  // cldpolja
 
+IF IzFMKIni("LD","Rekap_ZaIsplatuRasclanitiPoTekRacunima","N",KUMPATH)=="D" .and. LEN(aUkTR)>1
+  ? m
+  ? "ZA ISPLATU:"
+  ? "-----------"
+  nMArr:=SELECT()
+  SELECT KRED
+  ASORT(aUkTr,,,{|x,y| x[1]<y[1]})
+  FOR i:=1 TO LEN(aUkTR)
+    IF EMPTY(aUkTR[i,1])
+      ? PADR("B L A G A J N A",LEN(aUkTR[i,1]+KRED->naz)+1)
+    ELSE
+      HSEEK aUkTR[i,1]
+      ? aUkTR[i,1], KRED->naz
+    ENDIF
+    @ prow(),60 SAY aUkTR[i,2] pict gpici; ?? "",gValuta
+  NEXT
+  SELECT (nMArr)
+ENDIF
 
 ? m
 ?  "UKUPNO ZA ISPLATU";  @ prow(),60 SAY nUIznos pict gpici; ?? "",gValuta
