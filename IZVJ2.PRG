@@ -991,3 +991,206 @@ FUNCTION SortOpSt(cId)
  SELECT (nArr)
 RETURN cVrati
 
+
+// -----------------------------------
+// IZvjestaj o OBracunatim DOPrinosima
+// -----------------------------------
+PROC IzObDop()
+ cIdRj    := gRj
+ cGodina  := gGodina
+ cObracun := gObracun
+ cMjesecOd:=cMjesecDo:=gMjesec
+ cObracun:=" "
+ cDopr   :="3X;"
+ cNazDopr:="ZDRAVSTVENO OSIGURANJE"
+
+ O_PAROBR
+ O_RJ
+ O_OPS
+ O_RADN
+ O_LD
+ O_POR
+ O_DOPR
+
+ O_PARAMS
+ Private cSection:="5",cHistory:=" ",aHistory:={}
+
+ cMjesecOd := STR(cMjesecOd,2)
+ cMjesecDo := STR(cMjesecDo,2)
+ cGodina   := STR(cGodina  ,4)
+
+ RPar("p1",@cMjesecOd)
+ RPar("p2",@cMjesecDo)
+ RPar("p3",@cGodina  )
+ RPar("p4",@cIdRj    )
+ RPar("p5",@cDopr    )
+ RPar("p6",@cNazDopr )
+
+ cMjesecOd := VAL(cMjesecOd)
+ cMjesecDo := VAL(cMjesecDo)
+ cGodina   := VAL(cGodina  )
+ cDopr     := PADR(cDopr,40)
+ cNazDopr  := PADR(cNazDopr,40)
+
+ Box("#Uslovi za izvjestaj o obracunatim doprinosima",7,75)
+  @ m_x+2,m_y+2   SAY "Radna jedinica (prazno-sve): "   GET cIdRJ
+  @ m_x+3,m_y+2   SAY "Mjesec od: "                     GET cMjesecOd PICT "99"
+  @ m_x+3,col()+2 SAY "do"                              GET cMjesecDo PICT "99"
+  @ m_x+4,m_y+2   SAY "Godina: "                        GET cGodina   PICT "9999"
+  @ m_x+5,m_y+2   SAY "Doprinosi (npr. '3X;')"          GET cDopr PICT "@!"
+  @ m_x+6,m_y+2   SAY "Obracunati doprinosi za (naziv)" GET cNazDopr PICT "@!"
+  READ; ESC_BCR
+ BoxC()
+
+ cMjesecOd := STR(cMjesecOd,2)
+ cMjesecDo := STR(cMjesecDo,2)
+ cGodina   := STR(cGodina  ,4)
+ cDopr     := TRIM(cDopr)
+ cNazDopr  := TRIM(cNazDopr)
+
+ WPar("p1",cMjesecOd)
+ WPar("p2",cMjesecDo)
+ WPar("p3",cGodina  )
+ WPar("p4",cIdRj    )
+ WPar("p5",cDopr    )
+ WPar("p6",cNazDopr )
+ SELECT PARAMS; USE
+
+ cMjesecOd := VAL(cMjesecOd)
+ cMjesecDo := VAL(cMjesecDo)
+ cGodina   := VAL(cGodina  )
+
+ SELECT RADN
+ SET RELATION TO idopsrad INTO ops
+ SELECT LD
+ SET RELATION TO idradn INTO radn
+
+ cSort := "OPS->idkan+SortPre2()+str(mjesec)"
+ cFilt := "godina==cGodina .and. mjesec>=cMjesecOd .and. mjesec<=cMjesecDo"
+ IF !EMPTY(cIdRj)
+   cFilt += " .and. idrj=cIdRJ"
+ ENDIF
+
+ INDEX ON &cSort TO "TMPLD" FOR &cFilt
+
+ GO TOP
+ IF EOF(); MsgBeep("Nema podataka!"); CLOSERET; ENDIF
+
+ START PRINT CRET
+  gOstr:="D"; gTabela:=1
+  cKanton:=cRadnik:=""; lSubTot7:=.f.; cSubTot7:=""
+
+  aKol:={ { "PREZIME (IME RODITELJA) IME"  , {|| cRadnik   },.f., "C",32, 0, 1, 1} }
+
+  nKol:=1
+  FOR i:=cMjesecOd TO cMjesecDo
+    cPom:="xneto"+ALLTRIM(STR(i))
+    &cPom:=0
+    AADD( aKol , { NazMjeseca(i), {|| &cPom. },.t., "N", 9, 2, 1, ++nKol} )
+    cPom:="xdopr"+ALLTRIM(STR(i))
+    &cPom:=0
+    AADD( aKol , { "NETO/DOPR"  , {|| &cPom. },.t., "N", 9, 2, 2,   nKol} )
+  NEXT
+
+  xnetoUk:=xdoprUk:=0
+  AADD( aKol , { "UKUPNO"     , {|| xnetoUk },.t., "N",10, 2, 1, ++nKol} )
+  AADD( aKol , { "NETO/DOPR"  , {|| xdoprUk },.t., "N",10, 2, 2,   nKol} )
+
+  10CPI
+  ?? gnFirma
+  ?
+  ? "Mjesec: od", STR(cMjesecOd,2)+".", "do", str(cMjesecDo,2)+"."
+  ?? "    Godina:",str(cGodina,4)
+  ? "Obuhvacene radne jedinice: "; ?? IF(!EMPTY(cIdRJ),"'"+cIdRj+"'","SVE")
+  ? "Obuhvaceni doprinosi (sifre):", "'" + cDopr + "'"
+  ?
+
+  SELECT LD
+
+  StampaTabele(aKol,{|| FSvaki7()},,gTabela,,;
+       ,"IZVJESTAJ O OBRACUNATIM DOPRINOSIMA ZA "+cNazDopr,;
+                               {|| FFor7()},IF(gOstr=="D",,-1),,,{|| SubTot7()},,)
+  FF
+
+ END PRINT
+CLOSERET
+
+
+FUNCTION FFor7()
+ IF OPS->idkan <> cKanton .and. LEN(cKanton)>0
+   lSubTot7:=.t.
+   cSubTot7:=cKanton
+ ENDIF
+ cKanton:=OPS->idkan
+ xNetoUk:=xDoprUk:=0
+ cRadnik := RADN->(padr(  trim(naz)+" ("+trim(imerod)+") "+ime,32))
+ cIdRadn := IDRADN
+ FOR i:=cMjesecOd TO cMjesecDo
+   cPom:="xneto"+ALLTRIM(STR(i)); &cPom:=0
+   cPom:="xdopr"+ALLTRIM(STR(i)); &cPom:=0
+ NEXT
+ DO WHILE !EOF() .and. OPS->idkan==cKanton .and. IDRADN==cIdRadn
+   nTekMjes:=mjesec
+   _uneto:=0
+   DO WHILE !EOF() .and. OPS->idkan==cKanton .and. IDRADN==cIdRadn .and. mjesec==nTekMjes
+     _uneto += uneto
+     SKIP 1
+   ENDDO
+   SKIP -1
+   // neto
+   cPom    := "xneto"+ALLTRIM(STR(mjesec))
+   &cPom   := _uneto
+   xnetoUk += _uneto
+   // doprinos
+   PoDoIzSez(godina,mjesec)
+   nDopr   := IzracDopr(cDopr)
+   cPom    := "xdopr"+ALLTRIM(STR(mjesec))
+   &cPom   := nDopr
+   xdoprUk += nDopr
+   SKIP 1
+ ENDDO
+ SKIP -1
+RETURN .t.
+
+
+PROCEDURE FSvaki7()
+RETURN
+
+
+FUNC SubTot7()
+ LOCAL aVrati:={.f.,""}
+  IF lSubTot7 .or. EOF()
+    aVrati := { .t. , "UKUPNO KANTON '"+IF(EOF(),cKanton,cSubTot7)+"'" }
+    lSubTot7:=.f.
+  ENDIF
+RETURN aVrati
+
+
+FUNC IzracDopr(cDopr)
+ LOCAL nArr:=SELECT(), nDopr:=0, nPom:=0, nPom2:=0, nPom0:=0, nBO:=0
+  ParObr(mjesec,IF(lViseObr,cObracun,),cIdRj)
+  nBo:=round2(parobr->k3/100*_UNeto,gZaok2)
+  SELECT DOPR; GO TOP
+  DO WHILE !EOF()  // doprinosi
+   IF !(id $ cDopr); SKIP 1; LOOP; ENDIF
+   PozicOps(DOPR->poopst)   // ? mozda ovo rusi koncepciju zbog sorta na LD-u
+   IF !ImaUOp("DOPR",DOPR->id)
+     SKIP 1; LOOP
+   ENDIF
+   // if right(id,1)<>"X"
+   //   SKIP 1; LOOP
+   // endif
+   nPom:=max(dlimit,round(iznos/100*nBO,gZaok2))
+   if round(iznos,4)=0 .and. dlimit>0  // fuell boss
+     nPom:=1*dlimit   // kartica plate
+   endif
+   nDopr+=nPom
+   SKIP 1
+  ENDDO // doprinosi
+  SELECT (nArr)
+RETURN (nDopr)
+
+
+FUNCTION SortPre2()
+RETURN (BHSORT(RADN->(naz+ime+imerod))+idradn)
+
