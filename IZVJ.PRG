@@ -1581,26 +1581,37 @@ cPrikIzn:="D"
 nProcenat:=100
 nZkk:=gzaok
 cDrugiDio:="D"
+cNaslov:=""       // ISPLATA PLATA
+cNaslovTO:=""     // ISPLATA TOPLOG OBROKA
+nIznosTO:=0
 
  O_PARAMS
  Private cSection:="4",cHistory:=" ",aHistory:={}
  RPar("VS",@cVarSort)
+ RPar("ni",@cNaslov)
+ RPar("to",@cNaslovTO)
 
-Box(,9,50)
+cNaslov   := PADR( cNaslov   , 90 )
+cNaslovTO := PADR( cNaslovTO , 90 )
+
+Box(,12,60)
 @ m_x+1,m_y+2 SAY "Radna jedinica (prazno-sve): "  GET cIdRJ
 @ m_x+2,m_y+2 SAY "Mjesec: "  GET  cmjesec  pict "99"
 if lViseObr
-  @ m_x+2,col()+2 SAY "Obracun: "  GET  cObracun WHEN HelpObr(.t.,cObracun) VALID ValObr(.t.,cObracun)
+  @ m_x+ 2,col()+2 SAY "Obracun: "  GET  cObracun WHEN HelpObr(.t.,cObracun) VALID ValObr(.t.,cObracun)
 endif
-@ m_x+3,m_y+2 SAY "Godina: "  GET  cGodina  pict "9999"
-@ m_x+4,m_y+2 SAY "Prored:"   GET  cProred  pict "@!"  valid cProred $ "DN"
-@ m_x+5,m_y+2 SAY "Prikaz iznosa:" GET cPrikIzn pict "@!" valid cPrikizn$"DN"
-@ m_x+6,m_y+2 SAY "Prikaz u procentu %:" GET nprocenat pict "999.99"
-@ m_x+7,m_y+2 SAY "Sortirati po(1-sifri,2-prezime+ime)"  GET cVarSort VALID cVarSort$"12"  pict "9"
+@ m_x+ 3,m_y+2 SAY "Godina: "  GET  cGodina  pict "9999"
+@ m_x+ 4,m_y+2 SAY "Prored:"   GET  cProred  pict "@!"  valid cProred $ "DN"
+@ m_x+ 5,m_y+2 SAY "Prikaz iznosa:" GET cPrikIzn pict "@!" valid cPrikizn$"DN"
+@ m_x+ 6,m_y+2 SAY "Prikaz u procentu %:" GET nprocenat pict "999.99"
+@ m_x+ 7,m_y+2 SAY "Sortirati po(1-sifri,2-prezime+ime)"  GET cVarSort VALID cVarSort$"12"  pict "9"
+@ m_x+ 8,m_y+2 SAY "Naslov izvjestaja"  GET cNaslov pict "@S30"
+@ m_x+ 9,m_y+2 SAY "Naslov za topl.obrok"  GET cNaslovTO pict "@S30"
+@ m_x+10,m_y+2 SAY "Iznos (samo za topli obrok)"  GET nIznosTO pict gPicI
 read; clvbox(); ESC_BCR
 if nprocenat<>100
-  @ m_x+8,m_y+2 SAY "zaokruzenje" GET nZkk pict "99"
-  @ m_x+9,m_y+2 SAY "Prikazati i drugi spisak (za "+LTRIM(STR(100-nProcenat,6,2))+"%-tni dio)" GET cDrugiDio VALID cDrugiDio$"DN" PICT "@!"
+  @ m_x+11,m_y+2 SAY "zaokruzenje" GET nZkk pict "99"
+  @ m_x+12,m_y+2 SAY "Prikazati i drugi spisak (za "+LTRIM(STR(100-nProcenat,6,2))+"%-tni dio)" GET cDrugiDio VALID cDrugiDio$"DN" PICT "@!"
   read
 else
   cDrugiDio:="N"
@@ -1608,7 +1619,19 @@ endif
 BoxC()
 
  WPar("VS",cVarSort)
+ cNaslov:=ALLTRIM(cNaslov)
+ WPar("ni",cNaslov)
+ cNaslovTO:=ALLTRIM(cNaslovTO)
+ WPar("to",cNaslovTO)
  SELECT PARAMS; USE
+
+IF nIznosTO<>0
+  cNaslov:=cNaslovTO
+  qqImaTO:=IzFMKIni("LD","UslovImaTopliObrok",'UPPER(RADN->K2)=="D"',KUMPATH)
+ENDIF
+IF !EMPTY(cNaslov)
+  cNaslov += (" za mjesec:"+STR(cMjesec,2)+". godine:"+STR(cGodina,4)+".")
+ENDIF
 
 select ld
 //CREATE_INDEX("LDi1","str(godina)+idrj+str(mjesec)+idradn","LD")
@@ -1689,13 +1712,23 @@ do while !eof() .and.  cgodina==godina .and. idrj=cidrj .and. cmjesec=mjesec .an
    Scatter()
  endif
  select radn; hseek _idradn; select ld
- if !(empty(radn->isplata) .or. radn->isplata="BL")
-    skip
-    loop
+ if nIznosTO=0      // isplata plate
+   if !(empty(radn->isplata) .or. radn->isplata="BL")
+      skip
+      loop
+   endif
+ else               // isplata toplog obroka
+   if !(&qqImaTO)
+      skip
+      loop
+   endif
  endif
  if prow()>62+gpStranica; FF; Eval(bZagl); endif
  ? str(++nRbr,4)+".",idradn, RADNIK
  nC1:=pcol()+1
+ IF nIznosTO<>0
+   _uiznos:=nIznosTO
+ ENDIF
  if cprikizn=="D"
    if nProcenat<>100
     IF nDio==1
@@ -1762,6 +1795,11 @@ devpos(prow(),74)
 ?
 #ifdef CPOR
 ? "SPISAK "+IF(lIsplaceni,"ISPLACENIH","NEISPLACENIH")+" RADNIKA"
+#else
+IF !EMPTY(cNaslov)
+  ? PADC(ALLTRIM(cNaslov),90)
+  ? PADC(REPL("-",LEN(ALLTRIM(cNaslov))),90)
+ENDIF
 #endif
 if nprocenat<>100
  ?
@@ -3268,6 +3306,14 @@ select ld
 START PRINT CRET
 10CPI
 
+IF IzFMKIni("LD","RekapitulacijaGustoPoVisini","N",KUMPATH)=="D"
+  lGusto:=.t.
+  gRPL_Gusto()
+  gPStranica+=11
+ELSE
+  lGusto:=.f.
+ENDIF
+
 ParObr(cmjesec,IF(lViseObr,cObracun,),IF(!fSvi,cIdRj,))      // samo pozicionira bazu PAROBR na odgovaraju†i zapis
 
 private aRekap[cLDPolja,2]
@@ -3704,7 +3750,9 @@ next  // cldpolja
 ? m
 ?  "UKUPNO ZA ISPLATU";  @ prow(),60 SAY nUIznos pict gpici; ?? "",gValuta
 ? m
-?
+IF !lGusto
+  ?
+ENDIF
 
 // proizvoljni redovi pocinju sa "9"
 ?
@@ -3722,12 +3770,16 @@ do while !eof() .and. left(id,1)="9"
     Rekapld("PRIM"+tippr->id,cgodina,cMjesecDo,round2(&cpom,gZaok2),0)
   ENDIF
   skip
+  IF eof() .or. !left(id,1)="9"
+    ? m
+  ENDIF
 enddo
-? m
 
 
 IF cMjesec==cMjesecDo     // za viçe mjeseci nema prikaza poreza i doprinosa
-?
+IF !lGusto
+  ?
+ENDIF
 nBO:=0
 ? "Koef. Bruto osnove (KBO):",transform(parobr->k3,"999.99999%")
 ?? space(3),"BRUTO OSNOVA = NETO*KBO ="
@@ -4054,8 +4106,10 @@ if cUmPD=="D"
   @ prow(),pcol()+1 SAY nPor-nUPorOl-nPor2 pict gpici
 endif
 ? m
-?
-?
+IF !lGusto
+ ?
+ ?
+ENDIF
 ?
 if prow()>55+gpStranica; FF; endif
 
@@ -4208,7 +4262,9 @@ do while !eof()
 
   if right(id,1)=="X"
     ? m
-    ?
+    IF !lGusto
+      ?
+    ENDIF
     nDopr+=nPom
     if cUmPD=="D"
       nDopr2+=nPom2
@@ -4327,6 +4383,10 @@ endif
 ?  PADC("_____________________                    __________________",80)
 ?
 FF
+IF lGusto
+  gRPL_Normal()
+  gPStranica-=11
+ENDIF
 END PRINT
 #ifdef CAX
 select opsld; use
