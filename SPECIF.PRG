@@ -330,6 +330,10 @@ O_RADN
    GO TOP
 
    DO WHILE !EOF()
+     PozicOps(POR->poopst)
+     IF !ImaUOp("POR",POR->id)
+       SKIP 1; LOOP
+     ENDIF
      IF ID=="01"
        nPorNaPlatu  += ROUND2(POR->iznos * ld->uneto / 100,gZaok2)
      ELSE

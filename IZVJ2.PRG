@@ -1003,6 +1003,7 @@ PROC IzObDop()
  cObracun:=" "
  cDopr   :="3X;"
  cNazDopr:="ZDRAVSTVENO OSIGURANJE"
+ cPoOps:="S"
 
  O_PAROBR
  O_RJ
@@ -1025,6 +1026,7 @@ PROC IzObDop()
  RPar("p4",@cIdRj    )
  RPar("p5",@cDopr    )
  RPar("p6",@cNazDopr )
+ RPar("p7",@cPoOps )
 
  cMjesecOd := VAL(cMjesecOd)
  cMjesecDo := VAL(cMjesecDo)
@@ -1032,13 +1034,14 @@ PROC IzObDop()
  cDopr     := PADR(cDopr,40)
  cNazDopr  := PADR(cNazDopr,40)
 
- Box("#Uslovi za izvjestaj o obracunatim doprinosima",7,75)
+ Box("#Uslovi za izvjestaj o obracunatim doprinosima",8,75)
   @ m_x+2,m_y+2   SAY "Radna jedinica (prazno-sve): "   GET cIdRJ
   @ m_x+3,m_y+2   SAY "Mjesec od: "                     GET cMjesecOd PICT "99"
   @ m_x+3,col()+2 SAY "do"                              GET cMjesecDo PICT "99"
   @ m_x+4,m_y+2   SAY "Godina: "                        GET cGodina   PICT "9999"
   @ m_x+5,m_y+2   SAY "Doprinosi (npr. '3X;')"          GET cDopr PICT "@!"
   @ m_x+6,m_y+2   SAY "Obracunati doprinosi za (naziv)" GET cNazDopr PICT "@!"
+  @ m_x+7,m_y+2   SAY "Po kantonu (S-stanovanja,R-rada)" GET cPoOps VALID cPoOps$"SR" PICT "@!"
   READ; ESC_BCR
  BoxC()
 
@@ -1054,6 +1057,7 @@ PROC IzObDop()
  WPar("p4",cIdRj    )
  WPar("p5",cDopr    )
  WPar("p6",cNazDopr )
+ WPar("p7",cPoOps )
  SELECT PARAMS; USE
 
  cMjesecOd := VAL(cMjesecOd)
@@ -1061,7 +1065,11 @@ PROC IzObDop()
  cGodina   := VAL(cGodina  )
 
  SELECT RADN
- SET RELATION TO idopsrad INTO ops
+ IF cPoOps=="R"
+   SET RELATION TO idopsrad INTO ops
+ ELSE
+   SET RELATION TO idopsst INTO ops
+ ENDIF
  SELECT LD
  SET RELATION TO idradn INTO radn
 
