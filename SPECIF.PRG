@@ -281,6 +281,7 @@ O_RADN
  GO TOP
  HSEEK STR(nGodina,4)+STR(nMjesec,2)
  nUNeto:=0
+ nUNetoOsnova:=0
  nPorNaPlatu:=0
  nURadnika:=0
  DO WHILE STR(nGodina,4)+STR(nMjesec,2)==STR(godina,4)+STR(mjesec,2)
@@ -333,6 +334,7 @@ O_RADN
    ENDIF
 
    nUNeto+=ld->uneto
+   nUNetoOsnova+=MAX(ld->uneto,PAROBR->prosld*gPDLimit/100)
   altd()
   //porez na platu i ostali porez
   SELECT POR
@@ -344,11 +346,11 @@ O_RADN
        SKIP 1; LOOP
      ENDIF
      IF ID=="01"
-       nPorNaPlatu  += ROUND2(POR->iznos * ld->uneto / 100,gZaok2)
+       nPorNaPlatu  += ROUND2(POR->iznos * MAX(ld->uneto,PAROBR->prosld*gPDLimit/100) / 100,gZaok2)
      ELSE
        IF ID $ cPorOO
-         nPorezOstali   += ROUND2(POR->iznos * ld->uneto / 100,gZaok2)
-//         nOstaleObaveze += ROUND2(POR->iznos * ld->uneto / 100,gZaok2)
+         nPorezOstali   += ROUND2(POR->iznos * MAX(ld->uneto,PAROBR->prosld*gPDLimit/100) / 100,gZaok2)
+//         nOstaleObaveze += ROUND2(POR->iznos * MAX(ld->uneto,PAROBR->prosld*gPDLimit/100) / 100,gZaok2)
        ENDIF
      ENDIF
      SKIP 1
@@ -365,9 +367,9 @@ O_RADN
    IF lPDNE
      nOps := ASCAN( aOps , {|x| x[1]==RADN->idopsst} )
      IF nOps>0
-       aOps[nOps,3] += LD->uneto
+       aOps[nOps,3] += MAX(ld->uneto,PAROBR->prosld*gPDLimit/100)
      ELSE
-       AADD( aOps , { RADN->idopsst, "", LD->uneto } )
+       AADD( aOps , { RADN->idopsst, "", MAX(ld->uneto,PAROBR->prosld*gPDLimit/100) } )
      ENDIF
    ENDIF
    SKIP 1
@@ -445,7 +447,7 @@ O_RADN
 
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
- nBrutoOsnova:=round(PAROBR->k3 * nUNeto / 100,gZaok2)
+ nBrutoOsnova:=round(PAROBR->k3 * nUNetoOsnova / 100,gZaok2)
  // ukupno bruto
  nPom:=nBrutoOsnova
  UzmiIzIni(cIniName,'Varijable','U017',FormNum2(nPom,16,gPici2),'WRITE')

@@ -522,15 +522,17 @@ IF cVarijanta=="3"
      seek str(cGodina2,4)+cidrj+str(cmjesec2,2)
    endif
    npUNeto:=0
+   nNetoOsnova:=0
    do while !eof() .and.  cgodina2==godina .and. cmjesec2=mjesec .and. ( EMPTY(cIdRJ) .or. cidrj==idrj )
      npUneto+=LD->uneto
+     nNetoOsnova+=MAX(LD->uneto,PAROBR->prosld*gPDLimit/100)
      skip 1
    enddo  // LD
-   npBo:=round2(parobr->k3/100*npUneto,gZaok2)
+   npBo:=round2(parobr->k3/100*nNetoOsnova,gZaok2)
    SELECT POR; GO TOP
    npPom:=npPor:=npPorOps:=0
    do while !eof()
-     npPom:=max(dlimit,iznos/100*npUneto)
+     npPom:=max(dlimit,iznos/100*nNetoOsnova)
      npPor+=npPom
      skip 1
    enddo
@@ -662,13 +664,13 @@ do while !eof() .and.  cgodina==godina .and. idrj=cidrj .and. cmjesec=mjesec
  *****************************************
  *****************************************
  nUNeto:=n01+n02
- nBo:=round2(parobr->k3/100*nUNeto,gZaok2)
+ nBo:=round2(parobr->k3/100*MAX(nUneto,PAROBR->prosld*gPDLimit/100),gZaok2)
 
  SELECT POR; GO TOP
  nPom:=nPor:=nPorOps:=0
  do while !eof()
 //   nPom:=round2(max(dlimit,iznos/100*nUNeto),gZaok2)
-   nPom:=max(dlimit,iznos/100*nUNeto)
+   nPom:=max(dlimit,iznos/100*MAX(nUneto,PAROBR->prosld*gPDLimit/100))
    nPor+=nPom
    skip 1
  enddo
@@ -1227,11 +1229,11 @@ FUNCTION FFor43()
  ENDDO
 
  nUNeto:=siu
- nBo:=round2(parobr->k3/100*nUNeto,gZaok2)
+ nBo:=round2(parobr->k3/100*MAX(nUNeto,PAROBR->prosld*gPDLimit/100),gZaok2)
  SELECT POR; GO TOP
  nPom:=nPor:=nPorOps:=0
  do while !eof()
-   nPom:=max(dlimit,iznos/100*nUNeto)
+   nPom:=max(dlimit,iznos/100*MAX(nUNeto,PAROBR->prosld*gPDLimit/100))
    nPor+=nPom
    skip 1
  enddo
@@ -2433,7 +2435,7 @@ do while !eof() .and. cgodina==godina .and. idrj=cidrj .and. cmjesec=mjesec .and
 
           m:=cLMSK+"----------------------- -------- ------------- -------------"
           nBO:=0
-          nBo:=round2(parobr->k3/100*_UNeto,gZaok2)
+          nBo:=round2(parobr->k3/100*MAX(_UNeto,PAROBR->prosld*gPDLimit/100),gZaok2)
           IF lSkrivena
            ? m
           ELSE
@@ -2451,8 +2453,8 @@ do while !eof() .and. cgodina==godina .and. idrj=cidrj .and. cmjesec=mjesec .and
             ? cLMSK+id,"-",naz
             @ prow(),pcol()+1 SAY iznos pict "99.99%"
             nC1:=pcol()+1
-            @ prow(),pcol()+1 SAY _UNeto pict gpici
-            @ prow(),pcol()+1 SAY nPom:=max(dlimit,round(iznos/100*_UNeto,gZaok2)) pict gpici
+            @ prow(),pcol()+1 SAY MAX(_UNeto,PAROBR->prosld*gPDLimit/100) pict gpici
+            @ prow(),pcol()+1 SAY nPom:=max(dlimit,round(iznos/100*MAX(_UNeto,PAROBR->prosld*gPDLimit/100),gZaok2)) pict gpici
             nPor+=nPom
             skip
           enddo
@@ -2635,7 +2637,7 @@ do while !eof() .and. cgodina==godina .and. idrj=cidrj .and. cmjesec=mjesec .and
          select (F_KBENEF)
          if !used(); O_KBENEF; endif
          nBO:=0
-         nBo:=round2(parobr->k3/100*_UNeto,gZaok2)
+         nBo:=round2(parobr->k3/100*MAX(_UNeto,PAROBR->prosld*gPDLimit/100),gZaok2)
          select por; go top
          nPom:=nPor:=0
          nC1:=30+LEN(cLMSK); nPorOl:=0
@@ -2649,9 +2651,9 @@ do while !eof() .and. cgodina==godina .and. idrj=cidrj .and. cmjesec=mjesec .and
               @ prow(),pcol()+1 SAY iznos pict "99.99%"
               nC1:=pcol()+1
               //@ prow(),pcol()+1 SAY _UNeto pict gpici
-              @ prow(),39+LEN(cLMSK)  SAY nPom:=max(dlimit,round(iznos/100*_UNeto,gZaok2)) pict gpici
+              @ prow(),39+LEN(cLMSK)  SAY nPom:=max(dlimit,round(iznos/100*MAX(_UNeto,PAROBR->prosld*gPDLimit/100),gZaok2)) pict gpici
             ELSE
-              nPom:=max(dlimit,round(iznos/100*_UNeto,gZaok2))
+              nPom:=max(dlimit,round(iznos/100*MAX(_UNeto,PAROBR->prosld*gPDLimit/100),gZaok2))
             ENDIF
             nPor+=nPom
             skip
@@ -3330,7 +3332,8 @@ next
 
 nT1:=nT2:=nT3:=nT4:=0
 nUNeto:=0
-nUIznos:=nUSati:=nUNeto:=nUOdbici:=nUOdbiciP:=nUOdbiciM:=0
+nUNetoOsnova:=0
+nUIznos:=nUSati:=nUOdbici:=nUOdbiciP:=nUOdbiciM:=0
 nLjudi:=0
 
 private aNeta:={}
@@ -3374,6 +3377,8 @@ do while !eof() .and. eval(bUSlov)           // vrti se u bazi LD.DBF *******
    skip 1; loop
  endif
 
+ _ouneto:=MAX(_uneto,PAROBR->prosld*gPDLimit/100)
+
  select por; go top
  nPor:=nPorOl:=0
  do while !eof()  // datoteka por
@@ -3381,7 +3386,7 @@ do while !eof() .and. eval(bUSlov)           // vrti se u bazi LD.DBF *******
    IF !ImaUOp("POR",POR->id)
      SKIP 1; LOOP
    ENDIF
-   nPor+=round2(max(dlimit,iznos/100*_UNeto),gZaok2)
+   nPor+=round2(max(dlimit,iznos/100*_oUNeto),gZaok2)
    skip
  enddo
  if radn->porol<>0 .and. gDaPorOl=="D" .and. !Obr2_9() // poreska olaksica
@@ -3403,52 +3408,52 @@ do while !eof() .and. eval(bUSlov)           // vrti se u bazi LD.DBF *******
  select opsld
  seek "1"+radn->idopsst
  if found()
-   replace iznos with iznos+_uneto, iznos2 with iznos2+nPorOl, ljudi with ljudi+1
+   replace iznos with iznos+_ouneto, iznos2 with iznos2+nPorOl, ljudi with ljudi+1
  else
    append blank
-   replace id with "1", idops with radn->idopsst, iznos with _uneto,;
+   replace id with "1", idops with radn->idopsst, iznos with _ouneto,;
                         iznos2 with iznos2+nPorOl, ljudi with 1
  endif
  seek "3"+ops->idkan
  if found()
-   replace iznos with iznos+_uneto, iznos2 with iznos2+nPorOl, ljudi with ljudi+1
+   replace iznos with iznos+_ouneto, iznos2 with iznos2+nPorOl, ljudi with ljudi+1
  else
    append blank
-   replace id with "3", idops with ops->idkan, iznos with _uneto,;
+   replace id with "3", idops with ops->idkan, iznos with _ouneto,;
                         iznos2 with iznos2+nPorOl, ljudi with 1
  endif
  seek "5"+ops->idn0
  if found()
-   replace iznos with iznos+_uneto, iznos2 with iznos2+nPorOl, ljudi with ljudi+1
+   replace iznos with iznos+_ouneto, iznos2 with iznos2+nPorOl, ljudi with ljudi+1
  else
    append blank
-   replace id with "5", idops with ops->idn0, iznos with _uneto,;
+   replace id with "5", idops with ops->idn0, iznos with _ouneto,;
                         iznos2 with iznos2+nPorOl, ljudi with 1
  endif
  select ops; seek radn->idopsrad
  select opsld
  seek "2"+radn->idopsrad
  if found()
-   replace iznos with iznos+_uneto, iznos2 with iznos2+nPorOl , ljudi with ljudi+1
+   replace iznos with iznos+_ouneto, iznos2 with iznos2+nPorOl , ljudi with ljudi+1
  else
    append blank
-   replace id with "2", idops with radn->idopsrad, iznos with _uneto,;
+   replace id with "2", idops with radn->idopsrad, iznos with _ouneto,;
                         iznos2 with iznos2+nPorOl, ljudi with 1
  endif
  seek "4"+ops->idkan
  if found()
-   replace iznos with iznos+_uneto, iznos2 with iznos2+nPorOl, ljudi with ljudi+1
+   replace iznos with iznos+_ouneto, iznos2 with iznos2+nPorOl, ljudi with ljudi+1
  else
    append blank
-   replace id with "4", idops with ops->idkan, iznos with _uneto,;
+   replace id with "4", idops with ops->idkan, iznos with _ouneto,;
                         iznos2 with iznos2+nPorOl, ljudi with 1
  endif
  seek "6"+ops->idn0
  if found()
-   replace iznos with iznos+_uneto, iznos2 with iznos2+nPorOl, ljudi with ljudi+1
+   replace iznos with iznos+_ouneto, iznos2 with iznos2+nPorOl, ljudi with ljudi+1
  else
    append blank
-   replace id with "6", idops with ops->idn0, iznos with _uneto,;
+   replace id with "6", idops with ops->idn0, iznos with _ouneto,;
                         iznos2 with iznos2+nPorOl, ljudi with 1
  endif
  select ld
@@ -3458,9 +3463,9 @@ do while !eof() .and. eval(bUSlov)           // vrti se u bazi LD.DBF *******
 
  nPom:=ASCAN(aNeta,{|x| x[1]==vposla->idkbenef})
  if nPom==0
-    AADD(aNeta,{vposla->idkbenef,_UNeto})
+    AADD(aNeta,{vposla->idkbenef,_oUNeto})
  else
-    aNeta[nPom,2]+=_UNeto
+    aNeta[nPom,2]+=_oUNeto
  endif
 
  for i:=1 to cLDPolja
@@ -3491,6 +3496,7 @@ do while !eof() .and. eval(bUSlov)           // vrti se u bazi LD.DBF *******
  ++nLjudi
  nUSati+=_USati   // ukupno sati
  nUNeto+=_UNeto  // ukupno neto iznos
+ nUNetoOsnova+=_oUNeto  // ukupno neto osnova za obracun por.i dopr.
 
  cTR := IF( RADN->isplata$"TR#SK", RADN->idbanka,;
                                    SPACE(LEN(RADN->idbanka)) )
@@ -3818,8 +3824,8 @@ IF !lGusto
 ENDIF
 nBO:=0
 ? "Koef. Bruto osnove (KBO):",transform(parobr->k3,"999.99999%")
-?? space(3),"BRUTO OSNOVA = NETO*KBO ="
-@ prow(),pcol()+1 SAY nBo:=round2(parobr->k3/100*nUNeto,gZaok2)  pict gpici
+?? space(3),"BRUTO OSNOVA = NETO OSNOVA*KBO ="
+@ prow(),pcol()+1 SAY nBo:=round2(parobr->k3/100*nUNetoOsnova,gZaok2)  pict gpici
 ?
 
 #ifdef CPOR
@@ -3879,7 +3885,7 @@ nBO:=0
       IF !ImaUOp("POR",POR->id)
         SKIP 1; LOOP
       ENDIF
-      nPor+=round2(max(dlimit,iznos/100*_UNeto),gZaok2)
+      nPor+=round2(max(dlimit,iznos/100*MAX(_UNeto,PAROBR->prosld*gPDLimit/100)),gZaok2)
       skip
     enddo
     if radn->porol<>0 .and. gDaPorOl=="D" .and. !Obr2_9() // poreska olaksica
@@ -3897,6 +3903,7 @@ nBO:=0
     endif
 
     //**** nafiluj datoteku OPSLD *********************
+    _uneto:=MAX(_uneto,PAROBR->prosld*gPDLimit/100)
     select ops; seek radn->idopsst
     select opsld
     seek "1"+radn->idopsst
@@ -3974,6 +3981,7 @@ nBO:=0
    enddo  // LD
    nUNeto2:=nT1+nT2
    nBo2:=round2(parobr->k3/100*nUNeto2,gZaok2)
+   // gPDLimit?!
    nPK3:=PAROBR->K3
    USE
    SELECT PAROBR

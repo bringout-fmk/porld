@@ -801,6 +801,7 @@ function Prosj3(cTip,cTip2)
 *************************************************************************
 local nMj1:=nMj2:=nMj3:=0,nDijeli:=0, cmj1:=cmj2:=cmj3:="",npomak:=0,i:=0
 local nss1:=0,nss2:=0,nss3:=0,nSumsat:=0
+local nsp1:=0, nsp2:=0, nsp3:=0
 
 PushWA()
 
@@ -852,6 +853,8 @@ if found()
      nMj1:=UPrim()
    endif
    if cTip $ "126"
+    nss1:=wUSati
+    nsp1:=nMj1
     if wusati<>0
       nMj1:=nMj1/wUSati
     else
@@ -886,6 +889,8 @@ if found()
      nMj2:=UPrim()
    endif
    if cTip $ "126"
+    nss2:=wUSati
+    nsp2:=nMj2
     if wusati<>0
       nMj2:=nMj2/wUSati
     else
@@ -920,6 +925,8 @@ if found()
      nMj3:=UPrim()
    endif
    if cTip $ "126"
+    nss3:=wUSati
+    nsp3:=nMj3
     if wusati<>0
       nMj3:=nMj3/wUSati
     else
@@ -936,13 +943,15 @@ endif
 if nDijeli==0; nDijeli:=99999999; endif
 nSumsat:=IF(nss1+nss2+nss3<>0,nss1+nss2+nss3,99999999)
 
-Box(,6,50)
- @ m_x+1,m_y+2 SAY IF(cTip$"57","UKUPNA PRIMANJA","Prosjek")+" ZA MJESECE UNAZAD:"
+Box("#"+IF(cTip$"57","UKUPNA PRIMANJA","Prosjek")+" ZA MJESECE UNAZAD:",6,60)
  @ m_x+2,m_y+2 SAY cmj1; @ row(),col()+2 SAY nMj1 pict "999999.999"
+ IF cTip$"126"; ?? "  primanja/sati:"; ?? nsp1,"/",nss1; ENDIF
  IF cTip$"57"; ?? "  sati:"; ?? nss1; ENDIF
  @ m_x+3,m_y+2 SAY cmj2; @ row(),col()+2 SAY nMj2 pict "999999.999"
+ IF cTip$"126"; ?? "  primanja/sati:"; ?? nsp2,"/",nss2; ENDIF
  IF cTip$"57"; ?? "  sati:"; ?? nss2; ENDIF
  @ m_x+4,m_y+2 SAY cmj3; @ row(),col()+2 SAY nMj3 pict "999999.999"
+ IF cTip$"126"; ?? "  primanja/sati:"; ?? nsp3,"/",nss3; ENDIF
  IF cTip$"57"; ?? "  sati:"; ?? nss3; ENDIF
  @ m_x+6,m_y+2 SAY "Prosjek"; @ row(),col()+2 SAY (nMj3+nMj2+nMj1)/IF(cTip$"57",nSumsat,nDijeli) pict "999999.999"
  inkey(0)
@@ -1468,12 +1477,12 @@ if !used(); O_DOPR; endif
 select (F_KBENEF)
 if !used(); O_KBENEF; endif
 nBO:=0
-nBo:=parobr->k3/100*_UNeto
+nBo:=parobr->k3/100*MAX(_UNeto,PAROBR->prosld*gPDLimit/100)
 select por; go top
 nPom:=nPor:=0
 nC1:=30; nPorOl:=0
 do while !eof()
-   nPom:=max(dlimit,round(iznos/100*_UNeto,gZaok))
+   nPom:=max(dlimit,round(iznos/100*MAX(_UNeto,PAROBR->prosld*gPDLimit/100),gZaok))
    nPor+=nPom
    skip
 enddo

@@ -6,7 +6,7 @@ public gModul:="LD", gGlBaza:="LD.DBF"
 #include "ini0.ch"
 #endif
 
-PUBLIC cVer:='02.70m'
+PUBLIC cVer:='02.71m'
 
 
 #ifdef CAX
@@ -1021,7 +1021,7 @@ RETURN (NIL)
 FUNCTION SetFormule()
   private GetList:={}
   IF cIspravka=="D"
-    Box(,15,77)
+    Box(,17,77)
       gFURaz:=PADR(gFURaz,100)
       gFUPrim:=PADR(gFUPrim,100)
       gFUSati:=PADR(gFUSati,100)
@@ -1033,12 +1033,14 @@ FUNCTION SetFormule()
       @ m_x+10,m_y+2 SAY "Formula za uk.sati -razno :" GET gFURSati pict "@!S30"
       @ m_x+12,m_y+2 SAY "God. promjena koef.min.rada - ZENE:" GET gMRZ   pict "9999.99"
       @ m_x+14,m_y+2 SAY "God. promjena koef.min.rada - MUSK:" GET gMRM   pict "9999.99"
+      @ m_x+16,m_y+2 SAY "% prosjecne plate kao donji limit neta za obracun poreza i doprinosa" GET gPDLimit pict "999.99"
       read
     BoxC()
     IF lastkey()<>K_ESC
       Wpar("gd",gFUGod)
       WPar("m1", @gMRM)
       WPar("m2", @gMRZ)
+      WPar("dl", @gPDLimit)
       Wpar("uH",@gFURSati)
       Wpar("uS",@gFUSati)
       Wpar("up",gFUPrim)
@@ -1461,6 +1463,7 @@ public gListic:="N", gTS:="Preduzece"
 public gUNMjesec:="N"
 public gMRM:=0
 public gMRZ:=0
+public gPDLimit:=0
 public gSetForm:="1"
 public gPrBruto:="N"
 public gMinR:="%"
@@ -1488,6 +1491,7 @@ Rpar("pp",@gVarPP)
 Rpar("li",@gListic)
 RPar("m1",@gMRM)
 RPar("m2",@gMRZ)
+RPar("dl",@gPDLimit)
 Rpar("mj",@gMjesec)
 Rpar("ob",@gObracun)
 RPar("mr",@gMinR)      // min rad %, Bodovi
