@@ -1024,6 +1024,9 @@ gnLMarg:=0; gTabela:=1; gOstr:="N"
 cIdRj:=gRj
 cGodina:=gGodina
 cIdRadn:=SPACE(6)
+cSvaPrim:="S"
+qqOstPrim:=""
+cSamoAktivna:="D"
 
 #ifdef CPOR
  IF Pitanje(,"Izvjestaj se pravi za isplacene(D) ili neisplacene(N) radnike?","D")=="D"
@@ -1057,24 +1060,43 @@ O_RADN
  O_LD
 #endif
 
-/*
-O_PARAMS
-Private cSection:="4",cHistory:=" ",aHistory:={}
-*/
 
-Box(,3,77)
+// ----------------------------
+O_PARAMS
+Private cSection:="6",cHistory:=" ",aHistory:={}
+RPar("p1",@cIdRadn)
+RPar("p2",@cSvaPrim)
+RPar("p3",@qqOstPrim)
+RPar("p4",@cSamoAktivna)
+qqOstPrim:=PADR(qqOstPrim,100)
+// ----------------------------
+
+
+Box(,6,77)
 
 @ m_x+1,m_y+2 SAY "Radna jedinica (prazno sve): "  GET cIdRJ
 @ m_x+2,m_y+2 SAY "Godina: "  GET  cGodina  pict "9999"
 @ m_x+3,m_y+2 SAY "Radnik (prazno-svi radnici): "  GET  cIdRadn  valid empty(cIdRadn) .or. P_Radn(@cIdRadn)
 
+#ifndef CPOR
+@ m_x+4,m_y+2 SAY "Prikazati primanja (N-neto,V-van neta,S-sva primanja,0-nista)" GET cSvaPrim PICT "@!" VALID cSvaPrim$"NVS0"
+@ m_x+5,m_y+2 SAY "Ostala primanja za prikaz (navesti sifre npr. 25;26;27;):" GET qqOstPrim PICT "@S15"
+@ m_x+6,m_y+2 SAY "Prikazati samo aktivna primanja ? (D/N)" GET cSamoAktivna PICT "@!" VALID cSamoAktivna$"DN"
+#endif
+
 read; ESC_BCR
 
 BoxC()
 
-/*
-select params; use
-*/
+// ----------------------------
+qqOstPrim:=TRIM(qqOstPrim)
+WPar("p1",cIdRadn)
+WPar("p2",cSvaPrim)
+WPar("p3",qqOstPrim)
+WPar("p4",cSamoAktivna)
+SELECT PARAMS; USE
+// ----------------------------
+
 
   SELECT 0
   #ifdef CAX
@@ -1108,8 +1130,17 @@ DO WHILE !EOF()
       REPLACE mjesec WITH cMjesec
     ENDIF
     FOR i:=1 TO cLDPolja
-      cNPPI := "I"+IF(i<10,"0","")+ALLTRIM(STR(i))
-      cNPPS := "S"+IF(i<10,"0","")+ALLTRIM(STR(i))
+      cSTP := PADL(ALLTRIM(STR(i)),2,"0")
+      IF cSvaPrim!="S" .and. !(cSTP $ qqOstPrim)
+        SELECT TIPPR; HSEEK cSTP; SELECT MTEMP
+        IF cSvaPrim=="N" .and. TIPPR->uneto=="N" .or.;
+           cSvaPrim=="V" .and. TIPPR->uneto=="D" .or.;
+           cSvaPrim=="0"
+          LOOP
+        ENDIF
+      ENDIF
+      cNPPI := "I"+cSTP
+      cNPPS := "S"+cSTP
       nFPosI := FIELDPOS(cNPPI)
       nFPosS := FIELDPOS(cNPPS)
       IF nFPosI>0
@@ -1134,28 +1165,39 @@ nKol:=1
 nRed:=0
 nKorekcija:=0
 
+nPicISUk := 10
+nPicSDec := Decimala( gPicS )
+nPicIDec := Decimala( gPicI )
+
 FOR i:=1 TO cLDPolja
 
-  cNPPI := "I"+IF(i<10,"0","")+ALLTRIM(STR(i))
-  cNPPS := "S"+IF(i<10,"0","")+ALLTRIM(STR(i))
-  cAktivno := Ocitaj( SELECT("TIPPR") , RIGHT(cNPPI,2) , "aktivan" )
+  cSTP := PADL(ALLTRIM(STR(i)),2,"0")
+
+  cNPPI := "I"+cSTP
+  cNPPS := "S"+cSTP
+
+  SELECT TIPPR; HSEEK cSTP; cAktivno := aktivan
+  SELECT LD
 
   IF FIELDPOS(cNPPI) > 0
 
-    IF UPPER(cAktivno)=="D"
+    IF ( cSamoAktivna=="N" .or. UPPER(cAktivno)=="D" ) .and.;
+       ( cSvaPrim=="S" .or. cSTP $ qqOstPrim .or.;
+         cSvaPrim=="N" .and. TIPPR->uneto=="D" .or.;
+         cSvaPrim=="V" .and. TIPPR->uneto=="N" )
 
-      cNPrim := "{|| '"+RIGHT(cNPPI,2) + "-" +;
-                Ocitaj( SELECT("TIPPR") , RIGHT(cNPPI,2) , "naz" )+"'}"
+      cNPrim := "{|| '"+cSTP + "-" +;
+                TIPPR->naz+"'}"
 
-      AADD(aKol, { IF((i-nKorekcija)==1,"TIP PRIMANJA","") , &cNPrim. , .f., "C", 20, 0, 2*(i-nKorekcija)-1, 1 } )
+      AADD(aKol, { IF((i-nKorekcija)==1,"TIP PRIMANJA","") , &cNPrim. , .f., "C", 25, 0, 2*(i-nKorekcija)-1, 1 } )
 
       FOR j:=1 TO 12
 
         cPomMI := "nSum["+ALLTRIM(STR(i-nKorekcija))+","+ALLTRIM(STR(j))+",1]"
         cPomMS := "nSum["+ALLTRIM(STR(i-nKorekcija))+","+ALLTRIM(STR(j))+",2]"
 
-        AADD(aKol, { IF(i-nKorekcija==1,NazMjeseca(j),""), {|| &cPomMI.}, .f., "N", 10, 0, 2*(i-nKorekcija)-1, j+1} )
-        AADD(aKol, { IF(i-nKorekcija==1,"IZNOS/SATI","") , {|| &cPomMS.}, .f., "N", 10, 0, 2*(i-nKorekcija)  , j+1} )
+        AADD(aKol, { IF(i-nKorekcija==1,NazMjeseca(j),""), {|| &cPomMI.}, .f., "N", nPicISUk, nPicIDec, 2*(i-nKorekcija)-1, j+1} )
+        AADD(aKol, { IF(i-nKorekcija==1,"IZNOS/SATI","") , {|| &cPomMS.}, .f., "N", nPicISUk, nPicSDec, 2*(i-nKorekcija)  , j+1} )
 
       NEXT
 
@@ -1171,8 +1213,25 @@ FOR i:=1 TO cLDPolja
 
 NEXT
 
-nSum:=ARRAY(i-1-nKorekcija,12,2)
-FOR k:=1 TO i-1-nKorekcija
+// dodati sumu svega (red "UKUPNO")
+// --------------------------------
+AADD(aKol, { "", {|| REPL("=",25)}, .f., "C", 25, 0, 2*(i-nKorekcija)-1, 1 } )
+
+AADD(aKol, { "", {|| "U K U P N O"    }, .f., "C", 25, 0, 2*(i-nKorekcija), 1 } )
+FOR j:=1 TO 12
+  cPomMI := "nSum["+ALLTRIM(STR(i-nKorekcija))+","+ALLTRIM(STR(j))+",1]"
+  cPomMS := "nSum["+ALLTRIM(STR(i-nKorekcija))+","+ALLTRIM(STR(j))+",2]"
+
+  AADD(aKol, { "", {|| &cPomMI.}, .f., "N", nPicISUk, nPicIDec, 2*(i-nKorekcija)  , j+1} )
+  AADD(aKol, { "", {|| &cPomMS.}, .f., "N", nPicISUk, nPicSDec, 2*(i-nKorekcija)+1, j+1} )
+NEXT
+// --------------------------------
+
+Altd()
+
+nSumLen:=i-1-nKorekcija+1
+nSum:=ARRAY(nSumLen,12,2)
+FOR k:=1 TO nSumLen
   FOR j:=1 TO 12
     FOR l:=1 TO 2
        nSum[k,j,l] := 0
@@ -1202,7 +1261,7 @@ StampaTabele(aKol,{|| FSvaki3()},,gTabela,,;
 #else
 StampaTabele(aKol,{|| FSvaki3()},,gTabela,,;
      ,"Specifikacija primanja po mjesecima",;
-                             {|| FFor3()},IF(gOstr=="D",,-1),,,,,)
+                             {|| FFor3()},IF(gOstr=="D",,-1),,,,,,.f.)
 #endif
 
 FF
@@ -1212,18 +1271,26 @@ CLOSERET
 
 
 FUNCTION FFor3()
+ LOCAL nArr:=SELECT()
  DO WHILE !EOF()
    nKorekcija:=0
    FOR i:=1 TO cLDPolja
-     cNPPI := "I"+IF(i<10,"0","")+ALLTRIM(STR(i))
-     cNPPS := "S"+IF(i<10,"0","")+ALLTRIM(STR(i))
-     cAktivno := Ocitaj( SELECT("TIPPR") , RIGHT(cNPPI,2) , "aktivan" )
+     cSTP := PADL(ALLTRIM(STR(i)),2,"0")
+     cNPPI := "I"+cSTP
+     cNPPS := "S"+cSTP
+     SELECT TIPPR; HSEEK cSTP; cAktivno:=aktivan
+     SELECT (nArr)
      nFPosI := FIELDPOS(cNPPI)
      nFPosS := FIELDPOS(cNPPS)
      IF nFPosI>0
-       IF UPPER(cAktivno)=="D"
-         nSum[i-nKorekcija,mjesec,1]:=FIELDGET(nFPosI)
-         nSum[i-nKorekcija,mjesec,2]:=FIELDGET(nFPosS)
+       IF ( cSamoAktivna=="N" .or. UPPER(cAktivno)=="D" ) .and.;
+          ( cSvaPrim=="S" .or. cSTP $ qqOstPrim .or.;
+            cSvaPrim=="N" .and. TIPPR->uneto=="D" .or.;
+            cSvaPrim=="V" .and. TIPPR->uneto=="N" )
+         nSum[i-nKorekcija,mjesec,1] := FIELDGET(nFPosI)
+              nSum[nSumLen,mjesec,1] += FIELDGET(nFPosI)
+         nSum[i-nKorekcija,mjesec,2] := FIELDGET(nFPosS)
+              nSum[nSumLen,mjesec,2] += FIELDGET(nFPosS)
        ELSE
          nKorekcija+=1
        ENDIF
@@ -1518,4 +1585,13 @@ FUNC ASezona2(cPath,cG,cFajl)
   NEXT
   ASORT( aSez ,,, { |x,y| x[1] > y[1] } )
 RETURN aSez
+
+
+FUNC Cijelih(cPic)
+ LOCAL nPom := ATTOKEN( ALLTRIM(cPic) , "." , 2 ) - 2
+RETURN IF( nPom<1 , LEN(ALLTRIM(cPic)) , nPom )
+
+FUNC Decimala(cPic)
+ LOCAL nPom := ATTOKEN( ALLTRIM(cPic) , "." , 2 )
+RETURN IF( nPom<1 , 0 ,  LEN( SUBSTR( ALLTRIM(cPic) , nPom ) )  )
 
