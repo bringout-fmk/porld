@@ -4299,10 +4299,10 @@ ELSE // cMjesec==cMjesecDo // za viçe mjeseci nema prikaza poreza i doprinosa
       nT2 += aNetoMj[i,3]
       nT3 += aNetoMj[i,5]
       nT4 += ROUND2(aNetoMj[i,2]*aNetoMj[i,4]/100,gZaok2)
-      // nT5 += aNetoMj[i,5]*aNetoMj[i,2]/aNetoMj[i,3]
+      nT5 += aNetoMj[i,5]*aNetoMj[i,2]/aNetoMj[i,3]
   NEXT
-  // nT5 := nT5/LEN(aNetoMj)
-  nT5 := nT3*nT1/nT2
+  nT5 := nT5/LEN(aNetoMj)
+  // nT5 := nT3*nT1/nT2
   ? ms
   ?     "UKUPNO³"+;
       TRANS(nT1,gPicI) +"³"+;
