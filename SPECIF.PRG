@@ -1087,8 +1087,9 @@ RPar("p4",@cSamoAktivna)
 qqOstPrim:=PADR(qqOstPrim,100)
 // ----------------------------
 
+cPrikKolUk:="D"
 
-Box(,6,77)
+Box(,7,77)
 
 @ m_x+1,m_y+2 SAY "Radna jedinica (prazno sve): "  GET cIdRJ
 @ m_x+2,m_y+2 SAY "Godina: "  GET  cGodina  pict "9999"
@@ -1099,6 +1100,7 @@ Box(,6,77)
 @ m_x+5,m_y+2 SAY "Ostala primanja za prikaz (navesti sifre npr. 25;26;27;):" GET qqOstPrim PICT "@S15"
 @ m_x+6,m_y+2 SAY "Prikazati samo aktivna primanja ? (D/N)" GET cSamoAktivna PICT "@!" VALID cSamoAktivna$"DN"
 #endif
+@ m_x+7,m_y+2 SAY "Prikazati kolonu 'ukupno' ? (D/N)" GET cPrikKolUk PICT "@!" VALID cPrikKolUk$"DN"
 
 read; ESC_BCR
 
@@ -1181,9 +1183,11 @@ nKol:=1
 nRed:=0
 nKorekcija:=0
 
-nPicISUk := 10
+nPicISUk := IF(cPrikKolUk=="D",9,10)  // ako nema kolone ukupno mo§e i 10
 nPicSDec := Decimala( gPicS )
 nPicIDec := Decimala( gPicI )
+
+NUK := IF(cPrikKolUk=="D",13,12)   // ukupno kolona za iznose
 
 FOR i:=1 TO cLDPolja
 
@@ -1207,13 +1211,13 @@ FOR i:=1 TO cLDPolja
 
       AADD(aKol, { IF((i-nKorekcija)==1,"TIP PRIMANJA","") , &cNPrim. , .f., "C", 25, 0, 2*(i-nKorekcija)-1, 1 } )
 
-      FOR j:=1 TO 13
+      FOR j:=1 TO NUK
 
         cPomMI := "nSum["+ALLTRIM(STR(i-nKorekcija))+","+ALLTRIM(STR(j))+",1]"
         cPomMS := "nSum["+ALLTRIM(STR(i-nKorekcija))+","+ALLTRIM(STR(j))+",2]"
 
-        AADD(aKol, { IF(i-nKorekcija==1,NazMjeseca(j),""), {|| &cPomMI.}, .f., "N", nPicISUk, nPicIDec, 2*(i-nKorekcija)-1, j+1} )
-        AADD(aKol, { IF(i-nKorekcija==1,"IZNOS/SATI","") , {|| &cPomMS.}, .f., "N", nPicISUk, nPicSDec, 2*(i-nKorekcija)  , j+1} )
+        AADD(aKol, { IF(i-nKorekcija==1,NazMjeseca(j),""), {|| &cPomMI.}, .f., "N", nPicISUk+IF(j>12,1,0), nPicIDec, 2*(i-nKorekcija)-1, j+1} )
+        AADD(aKol, { IF(i-nKorekcija==1,"IZNOS/SATI","") , {|| &cPomMS.}, .f., "N", nPicISUk+IF(j>12,1,0), nPicSDec, 2*(i-nKorekcija)  , j+1} )
 
       NEXT
 
@@ -1234,21 +1238,21 @@ NEXT
 AADD(aKol, { "", {|| REPL("=",25)}, .f., "C", 25, 0, 2*(i-nKorekcija)-1, 1 } )
 
 AADD(aKol, { "", {|| "U K U P N O"    }, .f., "C", 25, 0, 2*(i-nKorekcija), 1 } )
-FOR j:=1 TO 13
+FOR j:=1 TO NUK
   cPomMI := "nSum["+ALLTRIM(STR(i-nKorekcija))+","+ALLTRIM(STR(j))+",1]"
   cPomMS := "nSum["+ALLTRIM(STR(i-nKorekcija))+","+ALLTRIM(STR(j))+",2]"
 
-  AADD(aKol, { "", {|| &cPomMI.}, .f., "N", nPicISUk, nPicIDec, 2*(i-nKorekcija)  , j+1} )
-  AADD(aKol, { "", {|| &cPomMS.}, .f., "N", nPicISUk, nPicSDec, 2*(i-nKorekcija)+1, j+1} )
+  AADD(aKol, { "", {|| &cPomMI.}, .f., "N", nPicISUk+IF(j>12,1,0), nPicIDec, 2*(i-nKorekcija)  , j+1} )
+  AADD(aKol, { "", {|| &cPomMS.}, .f., "N", nPicISUk+IF(j>12,1,0), nPicSDec, 2*(i-nKorekcija)+1, j+1} )
 NEXT
 // --------------------------------
 
 Altd()
 
 nSumLen:=i-1-nKorekcija+1
-nSum:=ARRAY(nSumLen,13,2)
+nSum:=ARRAY(nSumLen,NUK,2)
 FOR k:=1 TO nSumLen
-  FOR j:=1 TO 13
+  FOR j:=1 TO NUK
     FOR l:=1 TO 2
        nSum[k,j,l] := 0
     NEXT
@@ -1264,7 +1268,8 @@ START PRINT CRET
 
 ?? space(gnLMarg); ?? "LD: Izvjestaj na dan",date()
 ? space(gnLMarg); IspisFirme("")
-? space(gnLMarg); ?? "RJ: " + IF( EMPTY(cIdRJ) , "SVE" , cIdRJ )
+? space(gnLMarg); ?? "RJ: "; B_ON; ?? IF( EMPTY(cIdRJ) , "SVE" , cIdRJ ); B_OFF
+?? "  GODINA: "; B_ON; ?? cGodina; B_OFF
 ? "RADNIK: "
 IF EMPTY(cIdRadn)
  ?? "SVI"
@@ -1274,10 +1279,18 @@ ELSE
  SELECT (F_OPS); HSEEK RADN->idopsst; cOStan:=naz
  HSEEK RADN->idopsrad
  SELECT (F_RADN)
- ?? cIdRadn+"-"+trim(naz)+' ('+trim(imerod)+') '+ime
- ? "Br.knjiz:",brknjiz,"","Mat.br:",matbr,"","R.mjesto:",rmjesto
- ? "Min.rad:",kminrad,"","Str.spr:",STRSPR->naz,"","Opst.stan:",cOStan,"","Opst.rada:",OPS->naz
- ? "Dat.zasn.rad.odnosa:",datod,"","Pol:",pol
+ B_ON; ?? cIdRadn+"-"+trim(naz)+' ('+trim(imerod)+') '+ime; B_OFF
+ ? "Br.knjiz: "; B_ON; ?? brknjiz; B_OFF
+ ?? "  Mat.br: "; B_ON; ?? matbr; B_OFF
+ ?? "  R.mjesto: "; B_ON; ?? rmjesto; B_OFF
+
+ ? "Min.rad: "; B_ON; ?? kminrad; B_OFF
+ ?? "  Str.spr: "; B_ON; ?? STRSPR->naz; B_OFF
+ ?? "  Opst.stan: "; B_ON; ?? cOStan; B_OFF
+
+ ? "Opst.rada: "; B_ON; ?? OPS->naz; B_OFF
+ ?? "  Dat.zasn.rad.odnosa: "; B_ON; ?? datod; B_OFF
+ ?? "  Pol: "; B_ON; ?? pol; B_OFF
  SELECT MTEMP
 ENDIF
 
@@ -1319,14 +1332,16 @@ FUNCTION FFor3()
          nSum[i-nKorekcija,mjesec,2] := FIELDGET(nFPosS)
               nSum[nSumLen,mjesec,2] += FIELDGET(nFPosS)
 
-         // kolona 13.mjeseca tj."ukupno" iznos
-         nSum[i-nKorekcija,13,1] += FIELDGET(nFPosI)
-         // red ukupno kolone 13.mjeseca tj."sveukupno" iznos
-              nSum[nSumLen,13,1] += FIELDGET(nFPosI)
-         // kolona 13.mjeseca tj."ukupno" sati
-         nSum[i-nKorekcija,13,2] += FIELDGET(nFPosS)
-         // red ukupno kolone 13.mjeseca tj."sveukupno" sati
-              nSum[nSumLen,13,2] += FIELDGET(nFPosS)
+         IF NUK>12
+           // kolona 13.mjeseca tj."ukupno" iznos
+           nSum[i-nKorekcija,NUK,1] += FIELDGET(nFPosI)
+           // red ukupno kolone 13.mjeseca tj."sveukupno" iznos
+                nSum[nSumLen,NUK,1] += FIELDGET(nFPosI)
+           // kolona 13.mjeseca tj."ukupno" sati
+           nSum[i-nKorekcija,NUK,2] += FIELDGET(nFPosS)
+           // red ukupno kolone 13.mjeseca tj."sveukupno" sati
+                nSum[nSumLen,NUK,2] += FIELDGET(nFPosS)
+         ENDIF
        ELSE
          nKorekcija+=1
        ENDIF
