@@ -2327,16 +2327,16 @@ do while !eof() .and. cgodina==godina .and. idrj=cidrj .and. cmjesec=mjesec .and
               ELSE
                 COND
               ENDIF
-              ? m2:=cLMSK+"   ------------------------------------------------  --------- ------- ---------"
-              ?     cLMSK+"        Kreditor      /              na osnovu         Ukupno   Ostalo   Rata"
+              ? m2:=cLMSK+"   ------------------------------------------------  --------- --------- -------"
+              ?     cLMSK+"        Kreditor      /              na osnovu         Ukupno    Ostalo   Rata"
               ? m2
               do while !eof() .and. _godina==godina .and. _mjesec=mjesec .and. idradn==_idradn
                select kred; hseek radkr->idkred; select radkr
                aIznosi:=OKreditu(idradn,idkred,naosnovu)
                ? cLMSK+" ",idkred,left(kred->naz,22),PADR(naosnovu,20)
-               @ prow(),pcol()+1 SAY aIznosi[1] pict "99999.99" // ukupno
-               @ prow(),pcol()+1 SAY aIznosi[1]-aIznosi[2] pict "99999.99"// ukupno-placeno
-               @ prow(),pcol()+1 SAY iznos pict "999999.99"
+               @ prow(),pcol()+1 SAY aIznosi[1] pict "999999.99" // ukupno
+               @ prow(),pcol()+1 SAY aIznosi[1]-aIznosi[2] pict "999999.99"// ukupno-placeno
+               @ prow(),pcol()+1 SAY iznos pict "9999.99"
                ukredita+=iznos
                skip
               enddo
@@ -2945,16 +2945,16 @@ if tippr->(found()) .and. tippr->aktivan=="D"
     ELSE
       COND
     ENDIF
-? m2:=cLMSK+" ------------------------------------------- --------- ------- --------"
-    ? cLMSK+"    Kreditor   /             na osnovu         Ukupno   Ostalo   Rata"
+? m2:=cLMSK+" ------------------------------------------- --------- --------- -------"
+    ? cLMSK+"    Kreditor   /             na osnovu         Ukupno    Ostalo   Rata"
     ? m2
     do while !eof() .and. _godina==godina .and. _mjesec=mjesec .and. idradn==_idradn
      select kred; hseek radkr->idkred; select radkr
      aIznosi:=OKreditu(idradn,idkred,naosnovu)
      ? cLMSK,idkred,left(kred->naz,15),PADR(naosnovu,20)
-     @ prow(),pcol()+1 SAY aIznosi[1] pict "99999.99" // ukupno
-     @ prow(),pcol()+1 SAY aIznosi[1]-aIznosi[2] pict "99999.99"// ukupno-placeno
-     @ prow(),pcol()+1 SAY iznos pict "99999.99"
+     @ prow(),pcol()+1 SAY aIznosi[1] pict "999999.99" // ukupno
+     @ prow(),pcol()+1 SAY aIznosi[1]-aIznosi[2] pict "999999.99"// ukupno-placeno
+     @ prow(),pcol()+1 SAY iznos pict "9999.99"
      ukredita+=iznos
      skip
     enddo
