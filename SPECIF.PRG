@@ -543,8 +543,8 @@ O_RADN
 
  nPom:=nDopr1X+nDopr2x+nDopr3x+;
        nDopr5x+nDopr6x+nDopr7x+;
-       nPorNaPlatu-nPorOlaksice+;
-       nOstaleOBaveze
+       nPorNaPlatu+nPorezOstali-;
+       nPorOlaksice+nOstaleOBaveze;
  // ukupno obaveze
  UzmiIzIni(cIniName,'Varijable','U15I', FormNum2(nPom,16,gPici2), 'WRITE')
 
