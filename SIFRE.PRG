@@ -39,6 +39,8 @@ opc[9]:= "9. --------------"
 opc[10]:="A. --------------"
 opc[11]:="B. --------------"
 opc[12]:="C. preduzeca"
+opc[13]:="D. --------------"
+opc[14]:="E. --------------"
 #else
 opc[9]:="9. vrste posla"
 opc[10]:="A. koef.benef.rst"
@@ -53,8 +55,6 @@ else
 endif
 opc[15]:="F. banke"
 opc[16]:="G. sifk"
-
-
 #endif
 
 O_RADN
@@ -408,6 +408,14 @@ ImeKol:={ { padr("Rbr PIO",10), {|| id}, "id", {|| .t.}, {|| vpsifra(wid)} },;
           { padr("Racun",16),{||  ziro}, "ziro" }                     ;
        }
 Kol:={1,2,3}
+IF KRED->(FIELDPOS("ADRESA"))<>0
+  AADD( ImeKol , { "Adresa"  , {|| adresa  } , "adresa"  } )
+  AADD( Kol , LEN(Kol)+1 )
+ENDIF
+IF KRED->(FIELDPOS("TELEFON"))<>0
+  AADD( ImeKol , { "Telefon" , {|| telefon } , "telefon" } )
+  AADD( Kol , LEN(Kol)+1 )
+ENDIF
 return PostojiSifra(F_KRED,1,10,55,"Lista preduzeca",@cId,dx,dy, {|Ch| KrBlok(Ch)},,,,,{"id"})
 #else
 ImeKol:={ { padr("Id",6), {|| id}, "id", {|| .t.}, {|| vpsifra(wid)} },;

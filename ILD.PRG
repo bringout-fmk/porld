@@ -259,6 +259,8 @@ AADD(aDBf,{ 'ID'                  , 'C' ,   6 ,  0 })
 AADD(aDBf,{ 'NAZ'                 , 'C' ,  30 ,  0 })
 AADD(aDBf,{ 'ZIRO'                , 'C' ,  20 ,  0 })
 AADD(aDBf,{ 'ZIROD'               , 'C' ,  20 ,  0 })
+AADD(aDBf,{ 'TELEFON'             , 'C' ,  20 ,  0 })
+AADD(aDBf,{ 'ADRESA'              , 'C' ,  30 ,  0 })
 if !file(SIFPATH+"KRED.DBF")
    DBCREATE2(SIFPATH+'KRED.DBF',aDbf)
 endif

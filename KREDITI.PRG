@@ -2048,15 +2048,35 @@ return left(cTxt,i)
 
 PROCEDURE ListPrekRjes()
  PRIVATE dOd:=CTOD("01.07.99"), dDo:=DATE()
-  gnLMarg:=0; gTabela:=0; gOstr:="D"; cOdvLin:="D"; cPKU:="N"
+  gnLMarg:=0; gTabela:=0; gOstr:="D"; cOdvLin:="D"; cPKU:="N"; cVarSort:="1"
   O_RADN
   O_RJES
-  Box(,5,70)
+
+  O_PARAMS
+  Private cSection:="4",cHistory:=" ",aHistory:={}
+  RPar("VS",@cVarSort)
+
+  Box(,6,75)
    @ m_x+2, m_y+2 SAY "Rjesenja za radnike kojima je prestalo pravo u periodu:"
    @ m_x+3, m_y+2 SAY "od:" GET dOd
    @ m_x+4, m_y+2 SAY "do:" GET dDo
+   @ m_x+5, m_y+2 SAY "Sortirati listu po ( 1-br.rjesenja , 2-prezime+ime )" GET cVarSort PICT "9" VALID cVarSort$"12"
    READ; ESC_BCR
   BoxC()
+
+  WPar("VS",cVarSort)
+  SELECT PARAMS; USE
+
+  SELECT RJES
+  IF cVarSort=="2"    // prezime+ime
+    Box(,2,30)
+     nSlog:=0; nUkupno:=RECCOUNT2()
+     cSort1:="SortPrez(IDRADN)"
+     cFilt := "prekdatpoc>="+cm2str(dOd)+" .and. prekdatpoc<="+cm2str(dDo)
+     INDEX ON &cSort1 TO "TMPRJES" FOR &cFilt EVAL(TekRec2()) EVERY 1
+    BoxC()
+    GO TOP
+  ENDIF
 
   aKol:={}; nKol:=0
   AADD( aKol , { "R.BR." , {|| STR(nRBr,4)+"."}, .f., "C", 5, 0, 1, ++nKol} )
@@ -2078,9 +2098,9 @@ PROCEDURE ListPrekRjes()
   GO TOP
   StampaTabele(aKol,,,gTabela,,;
                      ,"Spisak rjesenja radnika kojima je prestalo pravo za period od "+DTOC(dOd)+" do "+DTOC(dDo),;
-                     {|| FFor6()},IF(gOstr=="D",,-1),,cOdvLin=="D",,,)
+                     IF(cVarSort=="2",{|| FFor6a()},{|| FFor6()}),IF(gOstr=="D",,-1),,cOdvLin=="D",,,)
 
-  FF
+  // FF
   END PRINT
 CLOSERET
 
@@ -2092,5 +2112,10 @@ FUNCTION FFor6()
    lVrati:=.t.
  ENDIF
 RETURN lVrati
+
+FUNCTION FFor6a()
+  cNazRadn:=Ocitaj(F_RADN,idradn,"TRIM(naz)+' '+TRIM(ime)")
+  ++nRBr
+RETURN .t.
 
 #endif

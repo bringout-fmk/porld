@@ -908,8 +908,8 @@ IF cVarijanta!="3"
 
  EOF CRET
  GO TOP
-ELSE
- SET ORDER TO TAG (TagVO("1"))
+// ELSE
+//  SET ORDER TO TAG (TagVO("1"))
 ENDIF
 
 #ifdef CPOR                          // automatsko biranje tipova primanja
@@ -2051,6 +2051,9 @@ if pcount()<4
  O_LD
 #endif
 else
+#ifdef CPOR
+ lIsplaceni:=.t.
+#endif
  cObracun:=cObrac
 endif
 
@@ -2713,7 +2716,10 @@ ENDIF
 ? "RJ:",idrj,rj->naz
 ? idradn,"-",RADNIK,"  Mat.br:",radn->matbr
 ? "Reg.br.PIO:",radn->rbrpio
-? "Poslodavac:",_idkred, kred->naz
+? "Poslodavac:",_idkred, trim(kred->naz)
+if KRED->(FIELDPOS("ADRESA"))<>0
+  ?? ",", trim(kred->adresa)
+endif
 #else
 ? "OBRACUN PLATE ZA "+str(mjesec,2)+IspisObr()+"/"+str(godina,4)," ZA "+UPPER(TRIM(gTS)),gNFirma
 
