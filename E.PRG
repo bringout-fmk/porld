@@ -6,7 +6,7 @@ public gModul:="LD", gGlBaza:="LD.DBF"
 #include "ini0.ch"
 #endif
 
-PUBLIC cVer:='02.58m'
+PUBLIC cVer:='02.59s'
 
 
 #ifdef CAX
@@ -1020,7 +1020,10 @@ FUNCTION SetFormule()
   private GetList:={}
   IF cIspravka=="D"
     Box(,15,77)
-      gFURaz:=PADR(gFURaz,60)
+      gFURaz:=PADR(gFURaz,100)
+      gFUPrim:=PADR(gFUPrim,100)
+      gFUSati:=PADR(gFUSati,100)
+      gFURSati:=PADR(gFURSati,100)
       @ m_x+ 2,m_y+2 SAY "Formula za ukupna primanja:" GET gFUPrim  pict "@!S30"
       @ m_x+ 4,m_y+2 SAY "Formula za ukupno sati    :" GET gFUSati  pict "@!S30"
       @ m_x+ 6,m_y+2 SAY "Formula za godisnji:" GET gFUGod pict "@!S30"
