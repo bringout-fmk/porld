@@ -116,6 +116,7 @@ endif
 ParObr(cMjesec,IF(lViseObr,cObracun,),cIdRj)  // podesi parametre obra~una za ovaj mjesec
 
 #ifndef CPOR
+
 if gtipObr=="1"
  @ m_x+3,m_y+2   SAY IF(gBodK=="1","Broj bodova","Koeficijent") GET  _brbod pict "99999.99" valid FillBrBod()
 else
@@ -128,9 +129,9 @@ else
  @ m_x+3,col()+2 SAY "Koef.minulog rada" GET _kminrad pict "99.99%" valid FillKMinRad()
 endif
 @ m_x+4,m_y+2 SAY "Vrsta posla koji radnik obavlja" GET _IdVPosla valid (empty(_idvposla) .or. P_VPosla(@_IdVPosla,4,43)) .and. FillVPosla()
-//dorada
+read
 if lRadniSati
-   @ m_x+4,m_y+40 SAY "Radni sati: " GET _RadSat
+   @ m_x+4,m_y+59 SAY "R.Sati:" GET _RadSat
 endif
 
 #endif

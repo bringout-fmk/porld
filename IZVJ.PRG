@@ -2330,8 +2330,10 @@ do while !eof() .and. cgodina==godina .and. idrj=cidrj .and. cmjesec=mjesec .and
                @ prow(),pcol()+8 SAY _s&cPom  pict gpics; ?? " s"
                if tippr->id=="01" .and. lRadniSati
                   nRRSati:=_s&cPom
-                  @ prow(),60+LEN(cLMSK) say _i&cPom * parobr->k3/100 pict gpici
-                  ? SPACE(3) + "Odbici od bruta:  " + "-" + ALLTRIM(STR((_i&cPom * (parobr->k3)/100)-_i&cPom))
+                  @ prow(),60+LEN(cLMSK) SAY _i&cPom * parobr->k3/100 pict gpici
+                  @ prow()+1,0 SAY "Odbici od bruta: "
+                  @ prow(), pcol()+48 SAY "-" + ALLTRIM(STR((_i&cPom * (parobr->k3)/100)-_i&cPom))
+
                else
                   @ prow(),60+LEN(cLMSK) say _i&cPom        pict gpici
                endif
@@ -2408,7 +2410,9 @@ do while !eof() .and. cgodina==godina .and. idrj=cidrj .and. cmjesec=mjesec .and
          next
          ?
          ? m
-         ?  cLMSK+"UKUPNO ZA ISPLATU";  @ prow(),60+LEN(cLMSK) SAY _UIznos pict gpici; ?? "",gValuta
+         ?  cLMSK+"UKUPNO ZA ISPLATU"
+         @ prow(),60+LEN(cLMSK) SAY _UIznos pict gpici
+         ?? "",gValuta
          ? m
 
          if cVarijanta=="5"
@@ -2423,6 +2427,12 @@ do while !eof() .and. cgodina==godina .and. idrj=cidrj .and. cmjesec=mjesec .and
            select ld
          else
 
+         endif
+
+         if lRadniSati
+            ? "NAPOMENA: Ostaje da se plati iz preraspodjele radnog vremena "
+            ?? ALLTRIM(STR((ld->radsat)-nRRSati))  + " sati."
+            ?
          endif
 
          if lSkrivena
@@ -2584,12 +2594,6 @@ do while !eof() .and. cgodina==godina .and. idrj=cidrj .and. cmjesec=mjesec .and
            ENDIF
          endif
 
-         if lRadniSati
-            ? "NAPOMENA: Ostaje da se plati iz preraspodjele radnog vremena "
-            ?? ALLTRIM(STR((ld->radsat)-nRRSati))  + " sati."
-            ?
-
-         endif
          if lSkrivena
            if prow()<nKRSK+5
              nPom:=nKRSK-PROW()
