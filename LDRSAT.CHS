@@ -1,0 +1,7 @@
+*LD.DBF
+A RADSAT N 10 0
+
+
+*_LD.DBF
+A RADSAT N 10 0
+
