@@ -6,16 +6,16 @@ public gModul:="LD", gGlBaza:="LD.DBF"
 #include "ini0.ch"
 #endif
 
-PUBLIC cVer:='02.69s'
+PUBLIC cVer:='02.70m'
 
 
 #ifdef CAX
-PUBLIC cNaslov:="LD:LAN AX, 06.96-04.02"
+PUBLIC cNaslov:="LD:LAN AX, 06.96-05.02"
 #else
 #ifdef EXT
-PUBLIC cNaslov:="LD:LAN CDX EXT, 06.96-04.02"
+PUBLIC cNaslov:="LD:LAN CDX EXT, 06.96-05.02"
 #else
-PUBLIC cNaslov:="LD:LAN CDX, 06.96-04.02"
+PUBLIC cNaslov:="LD:LAN CDX, 06.96-05.02"
 #endif
 #endif
 

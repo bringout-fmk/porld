@@ -1447,6 +1447,302 @@ PROC RekTekRac()
 local nC1:=20, i
 local cTPNaz, nKrug:=1
 
+gnLMarg:=0; gTabela:=1; gOstr:="D"; cOdvLin:="D"
+
+cIdRj:=gRj; cmjesec:=gMjesec; cGodina:=gGodina
+cObracun:=gObracun
+cMjesecDo:=cMjesec
+cNacinIsplate:="S"
+
+qqPrikPrim:=""
+
+O_PAROBR
+O_RJ
+O_RADN
+O_KBENEF
+O_VPOSLA
+O_RADKR
+O_KRED
+
+cIdBanke:=SPACE(LEN(id))
+
+O_LD
+
+FOR i:=1 TO 100
+  IF FIELDPOS("I"+RIGHT("00"+ALLTRIM(STR(i)),2))==0; nPoljaPr:=i-1; EXIT; ENDIF
+  nPoljaPr:=i
+NEXT
+
+cIdRadn:=space(_LR_)
+
+qqRJ:=SPACE(60)
+Box("#REKAPITULACIJA NACINA ISPLATE PO RADNIM JEDINICAMA I PRIMANJIMA",12,75)
+
+O_PARAMS
+Private cSection:="4",cHistory:=" ",aHistory:={}
+RPar("pp",@qqPrikPrim)
+RPar("tt",@gTabela)
+
+qqPrikPrim := PADR(qqPrikPrim,80)
+cTRSamoUk:="N"
+
+DO WHILE .t.
+ @ m_x+3,m_y+2 SAY "Radne jedinice: "  GET  qqRJ PICT "@!S25"
+ @ m_x+4,m_y+2 SAY "Za mjesece od:"  GET  cmjesec  pict "99" VALID {|| cMjesecDo:=cMjesec,.t.}
+ @ m_x+4,col()+2 SAY "do:"  GET  cMjesecDo  pict "99" VALID cMjesecDo>=cMjesec
+ if lViseObr
+   @ m_x+4,col()+2 SAY "Obracun: " GET cObracun WHEN HelpObr(.t.,cObracun) VALID ValObr(.t.,cObracun)
+ endif
+ @ m_x+ 5,m_y+2 SAY "Godina: "  GET  cGodina  pict "9999"
+ @ m_x+ 7,m_y+2 SAY "Nacin isplate (S-svi,B-blagajna,T-tekuci racun)"  GET cNacinIsplate VALID cNacinIsplate$"SBT" PICT "@!"
+ @ m_x+ 8,m_y+2 SAY "Banka (prazno-sve): "  GET  cIdBanke pict "@!" when cNacinIsplate=="T" valid empty(cIdBanke) .or. P_Kred(@cIdBanke)
+ @ m_x+10,m_y+2 SAY "Primanja za prikaz (npr.06;22;23;) "  GET  qqPrikPrim pict "@S30"
+ @ m_x+11,m_y+2 SAY "Tip tabele (0/1/2)"  GET  gTabela valid gTabela>=0 .and. gTabela<=2 pict "9"
+
+ read; clvbox(); ESC_BCR
+ aUsl1:=Parsiraj(qqRJ,"IDRJ")
+ aUsl2:=Parsiraj(qqRJ,"ID")
+ if aUsl1<>NIL.and.aUsl2<>NIL; exit; endif
+ENDDO
+
+IF cNacinIsplate=="S" .or. cNacinIsplate=="T" .and. EMPTY(cIdBanke)
+  cTRSamoUk:=Pitanje(,"Prikazati samo ukupno za sve tekuce racune? (D/N)","N")
+ENDIF
+
+SELECT PARAMS
+qqPrikPrim:=TRIM(qqPrikPrim)
+WPar("pp",qqPrikPrim)
+WPar("tt",gTabela)
+SELECT PARAMS; USE
+
+BoxC()
+
+if lViseObr
+  O_TIPPRN
+else
+  O_TIPPR
+endif
+
+SELECT LD
+
+if lViseObr
+  cObracun:=TRIM(cObracun)
+else
+  cObracun:=""
+endif
+
+// CREATE_INDEX("LDi2","str(godina)+str(mjesec)+idradn","LD")
+set order to tag (TagVO("2"))
+
+PRIVATE cFilt1:=""
+cFilt1 := ".t." + IF(EMPTY(qqRJ),"",".and."+aUsl1)
+
+if lViseObr
+  cFilt1 += ".and. OBR="+cm2str(cObracun)
+endif
+
+cFilt1 := STRTRAN(cFilt1,".t..and.","")
+
+IF cFilt1==".t."
+  SET FILTER TO
+ELSE
+  SET FILTER TO &cFilt1
+ENDIF
+
+SET RELATION TO idradn INTO RADN
+
+seek str(cGodina,4)+str(cmjesec,2)+cObracun
+EOF CRET
+
+nStrana:=0
+
+aVar:={}
+FOR i:=1 TO nPoljaPr
+  cPom:=RIGHT("00"+ALLTRIM(STR(i)),2)
+  IF cPom $ qqPrikPrim
+    AADD(aVar,"I"+cPom)
+  ENDIF
+NEXT
+AADD(aVar,"UNETO")
+
+CreREKNI(aVar)
+SELECT LD
+
+DO WHILE !EOF() .and. godina==cGodina .and. mjesec>=cMjesec .and. mjesec<=cMjesecDo
+
+  IF cNacinIsplate=="T" .and. ( RADN->isplata<>"TR" .or.;
+                                !EMPTY(cIdBanke) .and.;
+                                 cIdBanke<>RADN->idbanka ) .or.;
+     cNacinIsplate=="B" .and. RADN->isplata=="TR"
+    SKIP 1
+    LOOP
+  ENDIF
+
+  cRJ:=IDRJ
+  IF RADN->isplata=="TR"
+    cNIsplate := "TR"+IF(cTRSamoUk=="D",SPACE(6),RADN->idbanka)
+  ELSE
+    cNIsplate := "BL"+SPACE(6)
+  ENDIF
+
+  SELECT REKNI
+  HSEEK cNIsplate+cRJ
+  IF !FOUND()
+    APPEND BLANK
+    Scatter()
+    _NI   := cNIsplate
+    _IDRJ := cRJ
+  ELSE
+    Scatter()
+  ENDIF
+
+  FOR i:=1 TO LEN(aVar)
+    cPom := aVar[i]
+    _&cPom += LD->(&cPom)
+  NEXT
+
+  Gather()
+  SELECT LD
+
+  SKIP 1
+ENDDO
+
+aKol:={}
+nKol:=0
+AADD( aKol , { "RJ" , {|| IDRJ+"-"+RJ->NAZ} , .f. , "C", 55 , 0, 1 , ++nKol } )
+FOR i:=1 TO LEN(aVar)
+  cPom:=aVar[i]
+  IF cPom="I" .and. LEN(cPom)==3 .and.;
+     SUBSTR(cPom,2,1)$"0123456789" .and. SUBSTR(cPom,3,1)$"0123456789"
+    cPom2:=SUBSTR(cPom,2)+"-"+Ocitaj(F_TIPPR,SUBSTR(cPom,2),"naz")
+    AADD( aKol , { LEFT(cPom2,12)   , {|| &cPom.} , .t. , "N-", 12 , 2, 1 , ++nKol } )
+    AADD( aKol , { SUBSTR(cPom2,13) , {|| "#"   } , .f. , "C", 12 , 0, 2 ,   nKol } )
+  ELSE
+    AADD( aKol , { cPom , {|| &cPom.} , .t. , "N-", 12 , 2, 1 , ++nKol } )
+  ENDIF
+  stot&cPom:=0
+NEXT
+
+START PRINT CRET
+
+ // -------------------
+ B_ON
+ ?? "LD: Rekapitulacija dijela primanja po nacinu isplate"
+ IF cMjesec==cMjesecDo
+   ? "Firma:",gNFirma,"  Mjesec:",str(cmjesec,2)+IspisObr()
+   ?? "    Godina:", str(cGodina,4)
+   B_OFF
+ ELSE
+   ? "Firma:",gNFirma,"  Za mjesece od:",str(cmjesec,2),"do",str(cmjesecDo,2)+IspisObr()
+   ?? "    Godina:", str(cGodina,4)
+   B_OFF
+ ENDIF
+ ?
+ // -------------------
+
+ SELECT REKNI
+ SET RELATION TO idrj INTO RJ
+ GO TOP
+
+ // DO WHILE !EOF()
+
+   cNI := ""
+   gaSubTotal:={}
+   gaDodStavke:={}
+
+   StampaTabele(aKol,{|| .t.},,gTabela, ,;
+                ,,;
+                {|| FForRNI()},IF(gOstr=="D",,-1),,cOdvLin=="D",,,,.f.)
+     //  ...................
+     //         ,,;         <-    , "NAZIV IZVJESTAJA" ,
+     //  ...................
+
+
+ // ENDDO
+
+ FF
+END PRINT
+
+CLOSERET
+
+
+
+FUNCTION FForRNI()
+ LOCAL lSubTotal:=.f., i:=0, lDodZag:=.f.
+
+ lDodZag := (cNI<>NI)
+
+ cNI:=NI
+ gaSubTotal  := {}
+ gaDodStavke := {}
+
+ SKIP 1
+ IF EOF() .or. NI<>cNI
+   lSubTotal:=.t.
+ ENDIF
+ SKIP -1
+
+ FOR i:=1 TO LEN(aVar)
+   cPom := aVar[i]
+   stot&cPom += &cPom
+ NEXT
+
+ IF lSubTotal
+   AADD( gaSubTotal , { NIL } )
+   FOR i:=1 TO LEN(aVar)
+     cPom := aVar[i]
+     AADD( gaSubTotal[1] , stot&cPom )
+     stot&cPom := 0
+   NEXT
+   IF cNI="TR"
+     IF cTRSamoUk=="D"
+       cPom:="UKUPNO TEKUCI RACUNI"
+     ELSE
+       cPom:="UKUPNO T.R."+SUBSTR(cNI,3)+"-"+TRIM(Ocitaj(F_KRED,SUBSTR(cNI,3),"naz"))
+     ENDIF
+   ELSE
+     cPom:="UKUPNO BLAGAJNA"
+   ENDIF
+   AADD( gaSubTotal[1] , PADL(ALLTRIM(cPom),55,"*") )
+ ENDIF
+
+ IF lDodZag
+   AADD( gaDodStavke , {} )
+   AADD( gaDodStavke , {} )
+   AADD( gaDodStavke , {} )
+   IF cNI="TR"
+     IF cTRSamoUk=="D"
+       cPom:="TEKUCI RACUNI"
+     ELSE
+       cPom:="T.R."+SUBSTR(cNI,3)+"-"+TRIM(Ocitaj(F_KRED,SUBSTR(cNI,3),"naz"))
+     ENDIF
+   ELSE
+     cPom:="BLAGAJNA"
+   ENDIF
+   AADD( gaDodStavke[1] , PADC(ALLTRIM(cPom),55," ") )
+   AADD( gaDodStavke[2] , REPL("=",55) )
+   AADD( gaDodStavke[3] , IDRJ+"-"+RJ->NAZ )
+   FOR i:=1 TO LEN(aVar)
+     cPom := aVar[i]
+     AADD( gaDodStavke[1] , NIL )
+     AADD( gaDodStavke[2] , NIL )
+     AADD( gaDodStavke[3] , &cPom )
+   NEXT
+ ENDIF
+
+RETURN (!lDodZag)
+
+
+// ----------------
+//  REKapitulacija
+//  TEKucih
+//  RACuna - ukidam ovu f-ju
+// ----------------
+/*
+PROCEDURE RekTekRac()
+local nC1:=20, i
+local cTPNaz, nKrug:=1
+
 cIdRj:=gRj; cmjesec:=gMjesec; cGodina:=gGodina
 cObracun:=gObracun
 cMjesecDo:=cMjesec
@@ -1574,26 +1870,8 @@ INDEX ON ID+IDOPS tag "1"
 index ON  BRISANO TAG "BRISAN"
 use
 
-// napraviti   godina, mjesec, idrj, cid , iznos1, iznos2
-aDbf:={    {"GODINA"     ,  "C" , 4, 0 } ,;
-           {"MJESEC"     ,  "C" , 2, 0 } ,;
-           {"ID"         ,  "C" , 30, 0} ,;
-           {"opis"       ,  "C" , 20, 0} ,;
-           {"opis2"      ,  "C" , 35, 0} ,;
-           {"iznos1"     ,  "N" , 25, 4} ,;
-           {"iznos2"     ,  "N" , 25, 4} ;
-        }
-  AADD( aDbf , {"idpartner"  ,  "C" ,  6, 0} )
 
-DBCREATE2(KUMPATH+"REKLD",aDbf)
-
-select (F_REKLD); usex (KUMPATH+"rekld")
-index ON  BRISANO+"10" TAG "BRISAN"
-index on  godina+mjesec+id  tag "1"
-set order to tag "1"
-use
-
-O_REKLD; O_OPSLD
+O_OPSLD
 select ld
 
 START PRINT CRET
@@ -1668,10 +1946,10 @@ do while !eof() .and. eval(bUSlov)           // vrti se u bazi LD.DBF *******
  if radn->porol<>0 .and. gDaPorOl=="D" .and. !Obr2_9() // poreska olaksica
    if alltrim(cVarPorOl)=="2"
      nPorOl:=RADN->porol
-   elseif alltrim(cVarPorol)=="1"
+   elseif alltrim(cVarPorOl)=="1"
      nPorOl:=round(parobr->prosld*radn->porol/100,gZaok)
    else
-     nPorOl:= &("_I"+cVarPorol)
+     nPorOl:= &("_I"+cVarPorOl)
    endif
    if nPorOl>nPor // poreska olaksica ne moze biti veca od poreza
      nPorOl:=nPor
@@ -1953,5 +2231,25 @@ ENDIF
 END PRINT
 
 CLOSERET
+*/
+
+
+
+
+PROCEDURE CreREKNI(aV)
+ LOCAL i:=0
+  aDbf:={   {"NI"     ,"C", 8,0},;
+            {"IDRJ"   ,"C", 2,0};
+        }
+  FOR i:=1 TO LEN(aV)
+    AADD( aDbf, { aV[i] , "N" , 12 , 2 } )
+  NEXT
+  DBCREATE2(PRIVPATH+"REKNI",aDbf)
+  select 0; usex (PRIVPATH+"REKNI")
+  INDEX ON NI+IDRJ tag "1"
+  index ON  BRISANO TAG "BRISAN"
+  use
+  select 0; usex (PRIVPATH+"REKNI") ; set order to tag "1"
+RETURN
 
 
