@@ -1202,3 +1202,236 @@ RETURN (nDopr)
 FUNCTION SortPre2()
 RETURN (BHSORT(RADN->(naz+ime+imerod))+idradn)
 
+
+
+// -------------------------------------------
+// specifikacija primanja po radnim jedinicama
+// -------------------------------------------
+PROC SpecPrimRJ()
+ cGodina  := gGodina
+ cMjesecOd:=cMjesecDo:=gMjesec
+ cObracun:=" "
+ qqRj:=""
+ qqPrimanja:=""
+
+ O_TIPPR
+ O_KRED
+ O_RADKR; SET ORDER TO TAG "1"
+ O_RJ
+ O_RADN
+ O_LD
+
+ O_PARAMS
+ Private cSection:="5",cHistory:=" ",aHistory:={}
+
+ cMjesecOd := STR(cMjesecOd,2)
+ cMjesecDo := STR(cMjesecDo,2)
+ cGodina   := STR(cGodina  ,4)
+
+ RPar("p1",@cMjesecOd )
+ RPar("p2",@cMjesecDo )
+ RPar("p3",@cGodina   )
+ RPar("p8",@qqRj      )
+ RPar("p9",@cObracun  )
+ RPar("pA",@qqPrimanja)
+
+ cMjesecOd := VAL(cMjesecOd)
+ cMjesecDo := VAL(cMjesecDo)
+ cGodina   := VAL(cGodina  )
+ qqRj      := PADR(qqRj,40)
+ qqPrimanja:= PADR(qqPrimanja,100)
+
+ DO WHILE .t.
+   Box("#Uslovi za specifikaciju primanja po radnim jedinicama",8,75)
+    @ m_x+2,m_y+2   SAY "Radne jedinice (prazno-sve): "   GET qqRj PICT "@S20"
+    @ m_x+3,m_y+2   SAY "Mjesec od: "                     GET cMjesecOd PICT "99"
+    @ m_x+3,col()+2 SAY "do"                              GET cMjesecDo PICT "99"
+    @ m_x+4,m_y+2   SAY "Godina: "                        GET cGodina   PICT "9999"
+    IF lViseObr
+      @ m_x+4,col()+2 SAY "Obracun:" GET cObracun WHEN HelpObr(.t.,cObracun) VALID ValObr(.t.,cObracun)
+    ENDIF
+    @ m_x+5,m_y+2   SAY "Sifre primanja (prazno-sve):"   GET qqPrimanja PICT "@S30"
+    READ; ESC_BCR
+   BoxC()
+   aUslRJ   := Parsiraj(qqRj,"IDRJ")
+   aUslPrim := Parsiraj(qqPrimanja,"cIDPRIM")
+   IF aUslRJ<>NIL; EXIT; ENDIF
+ ENDDO
+
+ cMjesecOd := STR(cMjesecOd,2)
+ cMjesecDo := STR(cMjesecDo,2)
+ cGodina   := STR(cGodina  ,4)
+ qqRj      := TRIM(qqRj)
+ qqPrimanja:= TRIM(qqPrimanja)
+
+ WPar("p1",cMjesecOd )
+ WPar("p2",cMjesecDo )
+ WPar("p3",cGodina   )
+ WPar("p8",qqRj      )
+ RPar("p9",cObracun  )
+ WPar("pA",qqPrimanja)
+ SELECT PARAMS; USE
+
+ cMjesecOd := VAL(cMjesecOd)
+ cMjesecDo := VAL(cMjesecDo)
+ cGodina   := VAL(cGodina  )
+
+ // pravim pomocnu bazu LDT22.DBF
+ // -----------------------------
+ aDbf:={    {"IDPRIM"     ,  "C" ,  2, 0 } ,;
+            {"IDKRED"     ,  "C" ,  6, 0 } ,;
+            {"IDRJ"       ,  "C" ,  2, 0 } ,;
+            {"IZNOS"      ,  "N" , 18, 4 } ;
+         }
+ DBCREATE2(PRIVPATH+"LDT22",aDbf)
+
+ select 0
+ usex (PRIVPATH+"LDT22")
+ index on  idprim+idkred+idrj  tag "1"
+ set order to tag "1"
+ // -----------------------------
+
+ aPrim  := {}       // standardna primanja
+ aPrimK := {}       // primanja kao npr. krediti
+ FOR i:=1 TO cLDPolja
+  cIDPRIM:=padl(alltrim(str(i)),2,"0")
+  IF &aUslPrim
+    IF "SUMKREDITA" $ Ocitaj(F_TIPPR,cIdPrim,"formula")
+      AADD(aPrimK,"I"+cIdPrim)
+    ELSE
+      AADD(aPrim,"I"+cIdPrim)
+    ENDIF
+  ENDIF
+ NEXT
+
+ PRIVATE cFilt:=".t."
+ IF !EMPTY(qqRJ)    ; cFilt += ( ".and." + aUslRJ )                ; ENDIF
+ IF !EMPTY(cObracun); cFilt += ( ".and. OBR==" + cm2str(cObracun) ); ENDIF
+ IF cMjesecOd!=cMjesecDo
+   cFilt := cFilt + ".and.mjesec>="+cm2str(cMjesecOd)+;
+                    ".and.mjesec<="+cm2str(cMjesecDo)+;
+                    ".and.godina="+cm2str(cGodina)
+ ELSE
+   cFilt := cFilt + ".and.mjesec="+cm2str(cMjesecOd)+;
+                    ".and.godina="+cm2str(cGodina)
+ ENDIF
+
+ SELECT LD
+ SET FILTER TO &cFilt
+ GO TOP
+ aRJ:={}
+ DO WHILE !EOF()
+   // prolaz kroz standardna primanja
+   // -------------------------------
+   FOR i:=1 TO LEN(aPrim)
+     SELECT LD; nPom:=&(aPrim[i])
+     SELECT LDT22; SEEK RIGHT(aPrim[i],2)+SPACE(6)+LD->IDRJ
+     IF FOUND()
+       REPLACE iznos WITH iznos+nPom
+     ELSE
+       APPEND BLANK
+       REPLACE idprim  WITH RIGHT(aPrim[i],2),;
+               idkred  WITH SPACE(6)         ,;
+               idrj    WITH LD->IDRJ         ,;
+               iznos   WITH iznos+nPom
+       IF ASCAN(aRJ,{|x| x[1]==idrj})<=0
+         AADD( aRJ , { idrj , 0 } )
+       ENDIF
+     ENDIF
+     SELECT LD
+   NEXT
+   // prolaz kroz kredite
+   // -------------------
+   FOR i:=1 TO LEN(aPrimK)
+     SELECT LD; cKljuc:=STR(godina,4)+str(mjesec,2)+idradn
+     SELECT RADKR; SEEK cKljuc
+     IF FOUND()
+       DO WHILE !EOF() .and. STR(godina,4)+str(mjesec,2)+idradn==cKljuc
+         cIdKred:=idkred
+         nPom:=0
+         DO WHILE !EOF() .and. STR(godina,4)+str(mjesec,2)+idradn+idkred==cKljuc+cIdKred
+           nPom += placeno
+           SKIP 1
+         ENDDO
+         nPom := -nPom      // kredit je odbitak
+         SELECT LDT22; SEEK RIGHT(aPrimK[i],2)+cIdKred+LD->IDRJ
+         IF FOUND()
+           REPLACE iznos WITH iznos+nPom
+         ELSE
+           APPEND BLANK
+           REPLACE idprim  WITH RIGHT(aPrimK[i],2),;
+                   idkred  WITH cIdKred           ,;
+                   idrj    WITH LD->IDRJ          ,;
+                   iznos   WITH iznos+nPom
+           IF ASCAN(aRJ,{|x| x[1]==idrj})<=0
+             AADD( aRJ , { idrj , 0 } )
+           ENDIF
+         ENDIF
+         SELECT RADKR
+       ENDDO
+     ENDIF
+   NEXT
+   SELECT LD; SKIP 1
+ ENDDO
+
+ START PRINT CRET
+  gOstr:="D"; gTabela:=1
+  cPrimanje := ""; nUkupno:=0
+  nKol:=0
+
+  aKol:={ { "PRIMANJE"  , {|| cPrimanje } , .f. , "C" , 40 , 0, 1, ++nKol} }
+
+  // radne jedinice
+  ASORT( aRJ ,,, {|x,y| x[1]<y[1]} )
+  FOR i:=1 TO LEN(aRJ)
+    cPom:=ALLTRIM(STR(i))
+    AADD( aKol , { "RJ "+aRJ[i,1], {|| aRJ[&cPom.,2]}, .t., "N", 15, 2, 1, ++nKol  } )
+  NEXT
+
+  // ukupno
+  AADD( aKol , { "UKUPNO" , {|| nUkupno}, .t., "N", 15, 2, 1, ++nKol } )
+
+  10CPI
+  ?? gnFirma
+  ?
+  ? "Mjesec: od", STR(cMjesecOd,2)+".", "do", str(cMjesecDo,2)+"."
+  ?? "    Godina:",str(cGodina,4)
+  ? "Obuhvacene radne jedinice  :", IF(!EMPTY(qqRJ),"'"+qqRj+"'","SVE")
+  ? "Obuhvacena primanja (sifre):", "'" + qqPrimanja + "'"
+  ?
+
+  SELECT LDT22; GO TOP
+
+  StampaTabele(aKol,,,gTabela,,;
+       ,"SPECIFIKACIJA PRIMANJA PO RADNIM JEDINICAMA",;
+                               {|| FFor8()},IF(gOstr=="D",,-1),,,,,)
+  FF
+
+ END PRINT
+CLOSERET
+
+
+
+FUNC FFor8()
+ LOCAL i, nPos, cIdPrim, cIdKred, cIdRj
+ IF EMPTY(idkred)
+   cPrimanje := idprim+"-"+Ocitaj(F_TIPPR,idprim,"naz")
+ ELSE
+   cPrimanje := idprim+"-"+idkred+"-"+Ocitaj(F_KRED,idkred,"naz")
+ ENDIF
+ cIdPrim:=idprim
+ cIdKred:=idkred
+ FOR i:=1 TO LEN(aRJ); aRJ[i,2]:=0; NEXT
+ nUkupno := 0
+ DO WHILE !EOF() .and. cIdPrim+cIdKred==idprim+idkred
+   cIdRJ:=idrj
+   nPos:=ASCAN(aRJ,{|x| x[1]==cIdRj})
+   DO WHILE !EOF() .and. cIdPrim+cIdKred+cIdRj==idprim+idkred+idrj
+     aRJ[nPos,2] += iznos
+     nUkupno     += iznos
+     SKIP 1
+   ENDDO
+ ENDDO
+ SKIP -1
+RETURN .t.
+
