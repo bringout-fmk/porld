@@ -4504,7 +4504,9 @@ local nC1:=20,i
 
  cIdRadn:=space(_LR_)
 
- Box(,5,75)
+ cSatiVO:="S"
+
+ Box(,6,77)
    @ m_x+1,m_y+2 SAY "Radna jedinica (prazno-sve rj): "  GET cIdRJ valid empty(cidrj) .or. P_RJ(@cidrj)
    @ m_x+2,m_y+2 SAY "od mjeseca: "  GET  cmjesec  pict "99"
    @ m_x+2,col()+2 SAY "do"  GET  cmjesec2  pict "99"
@@ -4516,6 +4518,10 @@ local nC1:=20,i
    @ m_x+5,m_y+2 SAY "Razdvojiti za radnika po RJ:" GET cRazdvoji pict "@!";
                      when Empty (cIdRj) valid cRazdvoji $ "DN"
    read; clvbox(); ESC_BCR
+   if lViseObr .and. EMPTY(cObracun)
+     @ m_x+6,m_y+2 SAY "Prikaz sati (S-sabrati sve obracune , 1-obracun 1 , 2-obracun 2, ... )" GET cSatiVO VALID cSatiVO$"S123456789" PICT "@!"
+     read; ESC_BCR
+   endif
   BoxC()
 
 if lViseObr
@@ -4629,11 +4635,15 @@ do while !eof() .and.  cgodina==godina .and. idrj=cidrj .and. idradn==xIdRadn
    For i:=1 To cLDpolja
      cPom:=padl(alltrim(str(i)),2,"0")
      ** select tippr; seek cPom
-     ws&cPom+=_s&cPom
+     IF !lViseObr .or. cSatiVO=="S" .or. cSatiVO==_obr
+       ws&cPom+=_s&cPom
+     ENDIF
      wi&cPom+=_i&cPom
    Next
    wUIznos+=_UIznos
-   wUSati+=_USati
+   IF !lViseObr .or. cSatiVO=="S" .or. cSatiVO==_obr
+     wUSati+=_USati
+   ENDIF
    wUNeto+=_UNeto
    wIdRj := _IdRj
    wIdRadn := xIdRadn
@@ -4646,12 +4656,16 @@ do while !eof() .and.  cgodina==godina .and. idrj=cidrj .and. idradn==xIdRadn
  for i:=1 to cLDPolja
   cPom:=padl(alltrim(str(i)),2,"0")
   select tippr; seek cPom
-  ws&cPom+=_s&cPom
+  IF !lViseObr .or. cSatiVO=="S" .or. cSatiVO==_obr
+    ws&cPom+=_s&cPom
+  ENDIF
   wi&cPom+=_i&cPom
  next
  select ld
  wUIznos+=_UIznos
- wUSati+=_USati
+ IF !lViseObr .or. cSatiVO=="S" .or. cSatiVO==_obr
+   wUSati+=_USati
+ ENDIF
  wUNeto+=_UNeto
  skip
 enddo
@@ -4662,34 +4676,34 @@ enddo
    ? m
    cUneto:="D"
    for i:=1 to cLDPolja
-    cPom:=padl(alltrim(str(i)),2,"0")
-    select tippr; seek cPom
-    if tippr->uneto=="N" .and. cUneto=="D"
-      cUneto:="N"
-      ? m
-      ? "UKUPNO NETO:"; @ prow(),nC1+8  SAY  wUSati  pict gpics; ?? " sati"
-      @ prow(),60 SAY wUNeto pict gpici; ?? "",gValuta
-      ? m
-    endif
+     cPom:=padl(alltrim(str(i)),2,"0")
+     select tippr; seek cPom
+     if tippr->uneto=="N" .and. cUneto=="D"
+       cUneto:="N"
+       ? m
+       ? "UKUPNO NETO:"; @ prow(),nC1+8  SAY  wUSati  pict gpics; ?? " sati"
+       @ prow(),60 SAY wUNeto pict gpici; ?? "",gValuta
+       ? m
+     endif
 
-    if tippr->(found()) .and. tippr->aktivan=="D"
-     if wi&cpom<>0 .or. ws&cPom<>0
-      ? tippr->id+"-"+tippr->naz,tippr->opis
-      nC1:=pcol()
-      if tippr->fiksan $ "DN"
-         @ prow(),pcol()+8 SAY ws&cPom  pict gpics; ?? " s"
-         @ prow(),60 say wi&cPom        pict gpici
-      elseif tippr->fiksan=="P"
-         @ prow(),pcol()+8 SAY ws&cPom  pict "999.99%"
-         @ prow(),60 say wi&cPom        pict gpici
-      elseif tippr->fiksan=="B"
-         @ prow(),pcol()+8 SAY ws&cPom  pict "999999"; ?? " b"
-         @ prow(),60 say wi&cPom        pict gpici
-      elseif tippr->fiksan=="C"
-         @ prow(),60 say wi&cPom        pict gpici
+     if tippr->(found()) .and. tippr->aktivan=="D"
+      if wi&cpom<>0 .or. ws&cPom<>0
+       ? tippr->id+"-"+tippr->naz,tippr->opis
+       nC1:=pcol()
+       if tippr->fiksan $ "DN"
+          @ prow(),pcol()+8 SAY ws&cPom  pict gpics; ?? " s"
+          @ prow(),60 say wi&cPom        pict gpici
+       elseif tippr->fiksan=="P"
+          @ prow(),pcol()+8 SAY ws&cPom  pict "999.99%"
+          @ prow(),60 say wi&cPom        pict gpici
+       elseif tippr->fiksan=="B"
+          @ prow(),pcol()+8 SAY ws&cPom  pict "999999"; ?? " b"
+          @ prow(),60 say wi&cPom        pict gpici
+       elseif tippr->fiksan=="C"
+          @ prow(),60 say wi&cPom        pict gpici
+       endif
       endif
      endif
-    endif
    next
    ? m
    ?  "UKUPNO ZA ISPLATU";  @ prow(),60 SAY wUIznos pict gpici; ?? "",gValuta

@@ -16,10 +16,11 @@ Opc[3]:="3. lista rjesenja za jedno preduzece"
 Opc[4]:="4. rjesenje o prestanku prava"
 Opc[5]:="5. lista rjesenja za radnike kojima je prestalo pravo"
 #else
-private opc[3]
+private opc[4]
 Opc[1]:="1. novi kredit                        "
 Opc[2]:="2. pregled/ispravka kredita"
 Opc[3]:="3. lista kredita za jednog kreditora"
+Opc[4]:="4. brisanje kredita"
 #endif
 
 
@@ -61,6 +62,9 @@ Izbor:=menu("kred",opc,Izbor,.f.)
         RjesPrest()
      case izbor == 5
         ListPrekRjes()
+     #else
+       case izbor == 4
+        BrisiKred()
      #endif
    endcase
 
@@ -81,7 +85,7 @@ private nGodina:=gGodina
 private cIdKred:=space(_LK_)
 
 
-private nIznKred:=nRata:=0
+private nIznKred:=nRata:=nRata2:=0
 
 
 #IFDEF CPOR
@@ -266,10 +270,22 @@ Box(,10,70)
   @ m_x+4,m_y+2 SAY "Kredit po osnovu:" GET cOsnov pict "@!"
 
   @ m_x+5,m_y+2 SAY "Ukupan iznos kredita:" GET nIznKred pict "99"+gPicI
-  @ m_x+7,m_y+2 SAY "Rata Kredita:" GET nRata pict gpici valid nRata>0
+  IF IzFMKIni("LD","ZaNoviKreditUnositiBrojRata","N",KUMPATH)=="D"
+    lBrojRata:=.t.
+    @ m_x+7,m_y+2 SAY "Broj rata   :" GET nRata2 pict "9999" valid nRata2>0
+  ELSE
+    lBrojRata:=.f.
+    @ m_x+7,m_y+2 SAY "Rata kredita:" GET nRata pict gpici valid nRata>0
+  ENDIF
   read;ESC_BCR
 
 BoxC()
+IF lBrojRata
+  nRata := ROUND(nIznKred/nRata2,2)
+  IF nRata*nRata2-nIznKred<0
+    nRata += 0.01
+  ENDIF
+ENDIF
 #endif
 
 select radkr; set order to 2
@@ -279,6 +295,7 @@ seek cidradn+cIdkred+cosnov
 private nRec:=0
 if found()
   if Pitanje(,"Stavke vec postoje. Zamijeniti novim podacima ?","D")=="N"
+    MsgBeep("Rate nisu formirane! Unesite novu osnovu kredita za zadanog kreditora!")
     closeret
   else
     #ifdef CPOR
@@ -425,7 +442,6 @@ O_KRED
 #endif
 O_RADKR; set order to 2
 
-
 Box(,19,77)
 
 ImeKol:={}
@@ -476,6 +492,8 @@ endif
   endif
   select radkr
   @ m_x+20,m_y+1 SAY "<F10> ispravka opisnih podatakaÍÍ<Enter> ispravka rateÍÍ<c-P> stampa rjesenja"
+#else
+  cNaOsnovu := PADR( cNaOsnovu , LEN(RADKR->naosnovu) )
 #endif
 
 
@@ -819,20 +837,23 @@ endif
 select radkr; set order to 3
 //"RADKRi3","idkred+naosnovu+idradn"
 
-start print cret
-
 seek cidkred+cnaosnovu
 nRbr:=0
 
 if cRateDN=="R"; m+=REPL("-",16); endif
 
-
 if cidkred='.'
   fSvi:=.t.
   go top
 else
+  IF !FOUND()
+    MsgBeep("Nema podataka!")
+    CLOSERET
+  ENDIF
   fSvi:=.f.
 endif
+
+START PRINT CRET
 
 ZaglKred()
 do while !eof()  // vrti ako je fsvi=.t.
@@ -1005,9 +1026,9 @@ if !fsvi; exit; endif
 enddo  // eof()
 
 FF
-end print
+END PRINT
 
-closeret
+CLOSERET
 
 *******************
 *******************
@@ -2119,3 +2140,50 @@ FUNCTION FFor6a()
 RETURN .t.
 
 #endif
+
+
+PROC BrisiKred()
+ cIdRadn   := SPACE(_LR_)
+ cIdKRed   := SPACE(_LK_)
+ cNaOsnovu := SPACE(20)
+ cBrisi:="N"
+
+ O_RJ
+ O_OPS
+ O_RADN
+ O_KRED
+
+ O_RADKR; SET ORDER TO 2
+
+ Box("#BRISANJE NEOTPLACENIH RATA KREDITA",9,77)
+  @ m_x+2,m_y+2 SAY "Radnik:   " GET cIdRadn  valid {|| P_Radn(@cIdRadn),setpos(m_x+2,m_y+20),qqout(trim(radn->naz)+" ("+trim(radn->imerod)+") "+radn->ime),P_Krediti(cIdRadn,@cIdKred,@cNaOsnovu),.t.}
+  @ m_x+3,m_y+2 SAY "Kreditor: " GET cIdKred  valid P_Kred(@cIdKred,3,21) pict "@!"
+  @ m_x+4,m_y+2 SAY "Na osnovu:" GET cNaOsnovu pict "@!"
+  @ m_x+6, m_y+2, m_x+8, m_y+76 BOX "         " COLOR "GR+/R"
+  @ m_x+7,m_y+8 SAY "Jeste li 100% sigurni da zelite izbrisati ovaj kredit ? (D/N)" COLOR "GR+/R"
+  @ row(), col()+1 GET cBrisi VALID cBrisi$"DN" PICT "@!" COLOR "N/W"
+  READ; ESC_BCR
+ BoxC()
+
+ IF cBrisi=="D"
+   SELECT RADKR
+   SET ORDER TO TAG "2" // idradn+idkred+naosnovu+str(godina)+str(mjesec)
+   SEEK cIdRadn+cIdKred+cNaOsnovu
+   nStavki:=0
+   DO WHILE !EOF() .and. idradn+idkred+naosnovu==cIdRadn+cIdKred+cNaOsnovu
+     SKIP 1; nRec:=RECNO(); SKIP -1
+     IF placeno=0
+       ++nStavki
+       DELETE
+     ENDIF
+     GO (nRec)
+   ENDDO
+   IF nStavki>0
+     MsgBeep("Sve neotplacene rate (ukupno "+ALLTRIM(STR(nStavki))+") kredita izbrisane!")
+   ELSE
+     MsgBeep("Nista nije izbrisano. Za izabrani kredit ne postoje neotplacene rate!")
+   ENDIF
+ ENDIF
+
+CLOSERET
+
