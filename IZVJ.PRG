@@ -5,6 +5,7 @@
 #define  RADNIK  radn->(padr(  trim(naz)+" ("+trim(imerod)+") "+ime,35))
 
 local izb:=1
+lRadniSati:=IzFmkIni("LD","RadniSati","N",KUMPATH)=="D"
 
 #ifndef CPOR
 private opc[23], h[23]
@@ -2069,7 +2070,7 @@ return
 ********************************
 function KartPl(cIdRj,cMjesec,cGodina,cIdRadn,cObrac)
 local i,aNeta:={}
-
+nRRSati:=0
 lSkrivena:=.f.
 cLMSK:=""
 l2kolone:=.f.
@@ -2290,8 +2291,11 @@ do while !eof() .and. cgodina==godina .and. idrj=cidrj .and. cmjesec=mjesec .and
           if tippr->uneto=="N" .and. cUneto=="D"
             cUneto:="N"
             ? m
-            ? cLMSK+"UKUPNO NETO:"; @ prow(),nC1+8  SAY  _USati  pict gpics; ?? " sati"
-            @ prow(),60+LEN(cLMSK) SAY _UNeto pict gpici; ?? "",gValuta
+            ? cLMSK+"UKUPNO NETO:"
+            @ prow(),nC1+8  SAY  _USati  pict gpics
+            ?? " sati"
+            @ prow(),60+LEN(cLMSK) SAY _UNeto pict gpici
+            ?? "",gValuta
             ? m
           endif
 
@@ -2321,9 +2325,16 @@ do while !eof() .and. cgodina==godina .and. idrj=cidrj .and. cmjesec=mjesec .and
             endif
             ? cLMSK+tippr->id+"-"+padr(cTPNAZ,len(tippr->naz)),tippr->opis
             nC1:=pcol()
+
             if tippr->fiksan $ "DN"
                @ prow(),pcol()+8 SAY _s&cPom  pict gpics; ?? " s"
-               @ prow(),60+LEN(cLMSK) say _i&cPom        pict gpici
+               if tippr->id=="01" .and. lRadniSati
+                  nRRSati:=_s&cPom
+                  @ prow(),60+LEN(cLMSK) say _i&cPom * parobr->k3/100 pict gpici
+                  ? SPACE(3) + "Odbici od bruta:  " + "-" + ALLTRIM(STR((_i&cPom * (parobr->k3)/100)-_i&cPom))
+               else
+                  @ prow(),60+LEN(cLMSK) say _i&cPom        pict gpici
+               endif
             elseif tippr->fiksan=="P"
                @ prow(),pcol()+8 SAY _s&cPom  pict "999.99%"
                @ prow(),60+LEN(cLMSK) say _i&cPom        pict gpici
@@ -2436,7 +2447,7 @@ do while !eof() .and. cgodina==godina .and. idrj=cidrj .and. cmjesec=mjesec .and
 
           m:=cLMSK+"----------------------- -------- ------------- -------------"
           nBO:=0
-          nBo:=round2(parobr->k3/100*MAX(_UNeto,PAROBR->prosld*gPDLimit/100),gZaok2)
+          nBo:=round2(parobr->k3/100 * MAX(_UNeto,PAROBR->prosld * gPDLimit/100),gZaok2)
           IF lSkrivena
            ? m
           ELSE
@@ -2573,6 +2584,12 @@ do while !eof() .and. cgodina==godina .and. idrj=cidrj .and. cmjesec=mjesec .and
            ENDIF
          endif
 
+         if lRadniSati
+            ? "NAPOMENA: Ostaje da se plati iz preraspodjele radnog vremena "
+            ?? ALLTRIM(STR((ld->radsat)-nRRSati))  + " sati."
+            ?
+
+         endif
          if lSkrivena
            if prow()<nKRSK+5
              nPom:=nKRSK-PROW()
@@ -2804,7 +2821,8 @@ do while !eof() .and. cgodina==godina .and. idrj=cidrj .and. cmjesec=mjesec .and
          ? m
          ?  cLMSK+"UKUPNO ZA ISPLATU :";  @ prow(),60+LEN(cLMSK) SAY _UIznos pict gpici; ?? "",gValuta
          ? m
-
+         ?
+         
          if cVarijanta=="5"
            select ldsm
            hseek "1"+str(_godina,4)+str(_mjesec,2)+_idradn+_idrj
@@ -2943,6 +2961,9 @@ ELSE
     ?? "K.Min.rada:",transform(kminrad,"99.99%")
   endif
   ? IF(gBodK=="1","Vrijednost boda:","Vr.koeficijenta:"), transform(parobr->vrbod,"99999.99999")
+  if lRadniSati
+     ?? SPACE(19) + "Radni sati:   " + ALLTRIM(STR(ld->radsat))
+  endif
 ENDIF
 #endif
 return

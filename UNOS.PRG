@@ -27,6 +27,8 @@ do while .t.
 
 O_LD
 
+lRadniSati:=IzFmkIni("LD","RadniSati","N",KUMPATH)=="D"
+
 //cIdRadn:=space(6)   vrati ovo !!
 cIdRj    := gRj
 cMjesec  := gMjesec
@@ -126,6 +128,11 @@ else
  @ m_x+3,col()+2 SAY "Koef.minulog rada" GET _kminrad pict "99.99%" valid FillKMinRad()
 endif
 @ m_x+4,m_y+2 SAY "Vrsta posla koji radnik obavlja" GET _IdVPosla valid (empty(_idvposla) .or. P_VPosla(@_IdVPosla,4,43)) .and. FillVPosla()
+//dorada
+if lRadniSati
+   @ m_x+4,m_y+40 SAY "Radni sati: " GET _RadSat
+endif
+
 #endif
 
 if gSihtarica=="D"
