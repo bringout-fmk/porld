@@ -1115,8 +1115,9 @@ return  nMj1
 *********************
 *
 *********************
-function Predhodni(i,cVar)
+function Predhodni(i,cVar,cObr)
  local cKljuc:=""
+ if cObr==NIL; cObr:="1"; ENDIF
  private cpom:=""
 
  IF "U" $ TYPE("lRekalk"); lRekalk:=.f.; ENDIF
@@ -1143,10 +1144,19 @@ function Predhodni(i,cVar)
  if lViseObr
    &cPom := 0
    cKljuc := STR(godina,4)+STR(mjesec,2)+idradn
-   do while !eof() .and. STR(godina,4)+STR(mjesec,2)+idradn == cKljuc
-     &cPom += &cField
-     skip 1
-   enddo
+   IF !EMPTY(cObr)
+     do while !eof() .and. STR(godina,4)+STR(mjesec,2)+idradn == cKljuc
+       IF obr==cObr
+         &cPom += &cField
+       ENDIF
+       skip 1
+     enddo
+   ELSE
+     do while !eof() .and. STR(godina,4)+STR(mjesec,2)+idradn == cKljuc
+       &cPom += &cField
+       skip 1
+     enddo
+   ENDIF
  else
    &cPom:=&cField
  endif
