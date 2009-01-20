@@ -117,6 +117,12 @@ ImeKol:={  { padr("ID",8), {|| id}, "id", {|| wid:=val(wid), .t. }, {|| wid:=str
          }
 
 Kol:={1,2,3,4,5}
+
+if parobr->(fieldpos("MINLD"))<>0
+  AADD (ImeKol,{ padc("min.ld",12 ), {|| minld}, "minld" })
+  AADD(Kol,6)
+endif
+
 return PostojiSifra(F_PAROBR,1,10,70,"Parametri obracuna",@cId,dx,dy)
 
 

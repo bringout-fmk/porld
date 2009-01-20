@@ -5,41 +5,36 @@
 // postavka parametara firme
 // ---------------------------------------
 function SetFirma()
-  private GetList:={}
-  IF cIspravka=="D"
-    Box(, 9,77)
-      @ m_x+ 2,m_y+2 SAY "Radna jedinica" GET gRJ valid P_Rj(@gRj) pict "@!"
-      @ m_x+ 4,m_y+2 SAY "Mjesec        " GET gMjesec pict "99"
-      @ m_x+ 6,m_y+2 SAY "Godina        " GET gGodina pict "9999"
-      IF lViseObr
-        @ m_x+ 7,m_y+2 SAY "Obracun       " GET gObracun WHEN HelpObr(.f.,gObracun) VALID ValObr(.f.,gObracun)
-      ENDIF
-      @ m_x+ 8,m_y+2 SAY "Naziv firme:" GET gNFirma
-      @ m_x+ 9,m_y+2 SAY "TIP SUBJ.:" GET gTS
-      read
-      clvbox()
-    BoxC()
-    IF lastkey()<>K_ESC
+private GetList:={}
+
+Box(, 9,77)
+	@ m_x+ 2,m_y+2 SAY "Radna jedinica" GET gRJ valid P_Rj(@gRj) pict "@!"
+      	@ m_x+ 4,m_y+2 SAY "Mjesec        " GET gMjesec pict "99"
+      	@ m_x+ 6,m_y+2 SAY "Godina        " GET gGodina pict "9999"
+    	IF lViseObr
+    		@ m_x+ 7,m_y+2 SAY "Obracun       " GET gObracun WHEN HelpObr(.f.,gObracun) VALID ValObr(.f.,gObracun)
+      	ENDIF
+      	@ m_x+ 8,m_y+2 SAY "Naziv firme:" GET gNFirma
+      	@ m_x+ 9,m_y+2 SAY "TIP SUBJ.:" GET gTS
+      	read
+      	clvbox()
+BoxC()
+
+IF lastkey()<>K_ESC
       Wpar("fn",gNFirma)
       Wpar("ts",gTS)
       Wpar("go",gGodina)
       Wpar("mj",gMjesec)
       Wpar("ob",gObracun)
       Wpar("rj",gRJ)
-    ENDIF
-    cIspravka:="N"
-    RETURN .T.
-  ELSEIF cIspravka=="N"
-    RETURN .T.
-  ELSE
-    RETURN .F.
-  ENDIF
-RETURN (NIL)
+ENDIF
+
+return 
 
 
-FUNCTION SetForma()
+
+function SetForma()
   private GetList:={}
-  IF cIspravka=="D"
     Box(,11,77)
       @ m_x+ 2,m_y+2 SAY "Zaokruzenje primanja" GET gZaok pict "99"
       @ m_x+ 4,m_y+2 SAY "Zaokruzenje poreza i doprinosa" GET gZaok2 pict "99"
@@ -55,36 +50,35 @@ FUNCTION SetForma()
       Wpar("z2",gZaok2)
       Wpar("zo",gZaok)
     ENDIF
-    cIspravka:="N"
-    RETURN .T.
-  ELSEIF cIspravka=="N"
-    RETURN .T.
-  ELSE
-    RETURN .F.
-  ENDIF
-RETURN (NIL)
+    
+return (NIL)
 
 
 
-FUNCTION SetFormule()
-  private GetList:={}
-  IF cIspravka=="D"
-    Box(,17,77)
-      gFURaz:=PADR(gFURaz,100)
-      gFUPrim:=PADR(gFUPrim,100)
-      gFUSati:=PADR(gFUSati,100)
-      gFURSati:=PADR(gFURSati,100)
-      @ m_x+ 2,m_y+2 SAY "Formula za ukupna primanja:" GET gFUPrim  pict "@!S30"
-      @ m_x+ 4,m_y+2 SAY "Formula za ukupno sati    :" GET gFUSati  pict "@!S30"
-      @ m_x+ 6,m_y+2 SAY "Formula za godisnji:" GET gFUGod pict "@!S30"
-      @ m_x+ 8,m_y+2 SAY "Formula za uk.prim.-razno :" GET gFURaz pict "@!S30"
-      @ m_x+10,m_y+2 SAY "Formula za uk.sati -razno :" GET gFURSati pict "@!S30"
-      @ m_x+12,m_y+2 SAY "God. promjena koef.min.rada - ZENE:" GET gMRZ   pict "9999.99"
-      @ m_x+14,m_y+2 SAY "God. promjena koef.min.rada - MUSK:" GET gMRM   pict "9999.99"
-      @ m_x+16,m_y+2 SAY "% prosjecne plate kao donji limit neta za obracun poreza i doprinosa" GET gPDLimit pict "999.99"
-      read
-    BoxC()
-    IF lastkey()<>K_ESC
+function SetFormule()
+private GetList:={}
+
+Box(,18,77)
+
+gFURaz:=PADR(gFURaz,100)
+gFUPrim:=PADR(gFUPrim,100)
+gFUSati:=PADR(gFUSati,100)
+gFURSati:=PADR(gFURSati,100)
+
+@ m_x+ 2,m_y+2 SAY "Formula za ukupna primanja:" GET gFUPrim pict "@!S30"
+@ m_x+ 3,m_y+2 SAY "Formula za ukupno sati    :" GET gFUSati pict "@!S30"
+@ m_x+ 4,m_y+2 SAY "Formula za godisnji:" GET gFUGod pict "@!S30"
+@ m_x+ 5,m_y+2 SAY "Formula za uk.prim.-razno :" GET gFURaz pict "@!S30"
+@ m_x+ 6,m_y+2 SAY "Formula za uk.sati -razno :" GET gFURSati pict "@!S30"
+@ m_x+ 8,m_y+2 SAY "God. promjena koef.min.rada - ZENE:" GET gMRZ pict "9999.99"
+@ m_x+ 9,m_y+2 SAY "God. promjena koef.min.rada - MUSK:" GET gMRM pict "9999.99"
+@ m_x+11,m_y+2 SAY "% prosjecne plate kao donji limit neta za obracun poreza i doprinosa" GET gPDLimit pict "999.99"
+
+read
+
+BoxC()
+
+IF lastkey()<>K_ESC
       Wpar("gd",gFUGod)
       WPar("m1", @gMRM)
       WPar("m2", @gMRZ)
@@ -93,23 +87,20 @@ FUNCTION SetFormule()
       Wpar("uS",@gFUSati)
       Wpar("up",gFUPrim)
       Wpar("ur",gFURaz)
-    ENDIF
-    cIspravka:="N"
-    RETURN .T.
-  ELSEIF cIspravka=="N"
-    RETURN .T.
-  ELSE
-    RETURN .F.
-  ENDIF
-RETURN (NIL)
+      if gVarObracun == "2"
+      	Wpar("rl",gDoprLimit)
+      endif
+ENDIF
+    
+return
 
 
 
-FUNCTION SetObracun()
+function SetObracun()
   private GetList:={}
   cVarPorol:=padr(cVarPorol,2)
-  IF cIspravka=="D"
     Box(,16,77)
+      @ m_x+ 1,m_y+2 SAY "Varijanta obracuna ( /2) " GET gVarObracun 
       @ m_x+ 2,m_y+2 SAY "Tip obracuna " GET gTipObr
       @ m_x+ 4,m_y+2 SAY "Mogucnost unosa mjeseca pri obradi D/N:" GET gUnMjesec  pict "@!" valid glistic $ "DN"
       @ m_x+ 6,m_y+2 SAY "Koristiti set formula (sifrarnik Tipovi primanja):" GET gSetForm pict "9" valid V_setform()
@@ -129,24 +120,18 @@ FUNCTION SetObracun()
       WPar("p9", @gDaPorOl) // praviti poresku olaksicu D/N
       Wpar("to",gTipObr)
       Wpar("vo",cVarPorOl)
+      Wpar("ov",gVarObracun)
       WPar("um",gUNMjesec)
       Wpar("vs",gVarSpec)
       Wpar("Si",gSihtarica)
     ENDIF
-    cIspravka:="N"
-    RETURN .T.
-  ELSEIF cIspravka=="N"
-    RETURN .T.
-  ELSE
-    RETURN .F.
-  ENDIF
-RETURN (NIL)
+   
+return
 
 
 
-FUNCTION SetPrikaz()
+function SetPrikaz()
   private GetList:={}
-  IF cIspravka=="D"
     Box(,17,77)
       @ m_x+ 2,m_y+2 SAY "Krediti-rekap.po 'na osnovu' (D/N/X)?" GET gReKrOs VALID gReKrOs $ "DNX" PICT "@!"
       @ m_x+ 4,m_y+2 SAY "Na kraju obrade odstampati listic D/N:" GET gListic  pict "@!" valid glistic $ "DN"
@@ -168,20 +153,13 @@ FUNCTION SetPrikaz()
       Wpar("rk",gReKrOs)
       //Wpar("tB",gTabela)
     ENDIF
-    cIspravka:="N"
-    RETURN .T.
-  ELSEIF cIspravka=="N"
-    RETURN .T.
-  ELSE
-    RETURN .F.
-  ENDIF
-RETURN (NIL)
+    
+return
 
 
 
-FUNCTION SetRazno()
+function SetRazno()
   private GetList:={}
-  IF cIspravka=="D"
     Box(, 4,77)
       @ m_x+ 2,m_y+2 SAY "Fajl obrasca specifikacije" GET gFSpec VALID V_FSpec()
       read
@@ -189,19 +167,12 @@ FUNCTION SetRazno()
     IF lastkey()<>K_ESC
       WPar("os", @gFSpec)   // fajl-obrazac specifikacije
     ENDIF
-    cIspravka:="N"
-    RETURN .T.
-  ELSEIF cIspravka=="N"
-    RETURN .T.
-  ELSE
-    RETURN .F.
-  ENDIF
-RETURN (NIL)
+    
+return
 
 
-FUNCTION SetPorLD()
+function SetPorLD()
   private GetList:={}
-  IF cIspravka=="D"
     gBrRjes:=padr(gBrRjes,60)
     Box(, 7,77)
       cEr:=" "
@@ -218,15 +189,8 @@ FUNCTION SetPorLD()
       WPar("m3", @gMinRata)
       WPar("#2", @gTxtRtf)
     ENDIF
-    cIspravka:="N"
-    RETURN .T.
-  ELSEIF cIspravka=="N"
-    RETURN .T.
-  ELSE
-    RETURN .F.
-  ENDIF
-RETURN (NIL)
-
+    
+return 
 
 
 function v_setform()

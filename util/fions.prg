@@ -28,28 +28,20 @@ select(nArr)
 return (nil)
 
 
+// --------------------------------------------------
+// generisanje obracuna
+// --------------------------------------------------
+function mnu_gen()
+private opc := {}
+private opcexe := {}
+private izbor:=1
 
+AADD(opc, "1. generacija naknada za mjesec  ")
+AADD(opcexe, {|| GenNak() })
 
-function Rekalk()
-private opcx[1], izborx:=1
-Opcx[1]:="1. generacija naknada za mjesec  "
+menu_sc("genn")
 
-do while .t.
-
- h[1]:=""
- h[2]:=""
-
-Izborx:=menu("rk",opcx,Izborx,.f.)
-   do case
-     case Izborx==0
-       EXIT
-     case izborx == 1
-         GenNak()
-   endcase
-
-enddo
-
-return (nil)
+return 
 
 
 // ***************************
@@ -65,7 +57,8 @@ if lastkey()==K_ESC
    closeret
 endif
 
-cIdRj:=gRj; cMjesec:=gMjesec
+cIdRj:=gRj
+cMjesec:=gMjesec
 cGodina:=gGodina
 
 O_RADN
@@ -85,7 +78,10 @@ Box(,3,50)
 @ m_x+1,m_y+2 SAY "Radna jedinica: "; ?? cIdRJ
 @ m_x+2,m_y+2 SAY "Mjesec: "  GET  cMjesec  pict "99"
 @ m_x+3,m_y+2 SAY "Godina: "  GET  cGodina  pict "9999"
-read; ESC_BCR
+
+read
+ESC_BCR
+
 BoxC()
 
 SELECT PAROBR
@@ -96,13 +92,13 @@ IF FOUND()
       MsgBeep("Obracun za ovaj mjesec je zakljucen. Ispravke nisu dozvoljene!")
     ELSE
       MsgBeep("Obracun za ovaj mjesec nece biti uradjen dok ne definisete#"+;
-              "parametre obracuna (opcija D. u osnovnom meniju) !")
+              "parametre obracuna !")
     ENDIF
     CLOSERET
   ENDIF
 ELSE
   MsgBeep("Obracun za ovaj mjesec nece biti uradjen dok ne definisete#"+;
-          "parametre obracuna (opcija D. u osnovnom meniju) !")
+          "parametre obracuna !")
   CLOSERET
 ENDIF
 

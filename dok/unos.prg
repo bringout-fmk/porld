@@ -9,6 +9,7 @@ local cIdRadn,cMjesec,cIdRj
 
 private fnovi
 
+O_PARAMS
 O_PAROBR
 O_RADN
 O_VPOSLA
@@ -109,8 +110,8 @@ do while .t.
 
 	ParObr(cMjesec,IF(lViseObr,cObracun,),cIdRj)  // podesi parametre obra~una za ovaj mjesec
 
-	select params
-	Private cSection:="S",cHistory:=" ",aHistory:={}
+	//select params
+	//Private cSection:="S",cHistory:=" ",aHistory:={}
 
 	public cFormula:=""
 

@@ -76,13 +76,14 @@ return nil
 *{
 method chk_db()
 local cModStru:=""
+
 // provjeri postojanje specificnih polja LD.DBF
-O_RADN
-select radn
-if radn->(FieldPOS("HIREDFROM")) == 0
+//O_RADN
+//select radn
+//if radn->(FieldPOS("HIREDFROM")) == 0
 	// obavjesti za modifikaciju
-	cModStru += "DP.CHS, "
-endif
+//	cModStru += "DP.CHS, "
+//endif
 
 if !EMPTY(cModStru)
 	MsgBeep("Upozorenje!##Odraditi modifikacije struktura:#" + cModStru)
@@ -141,7 +142,7 @@ private opcexe:={}
 AADD(opc,   Lokal("1. porodilje-rjesenja                            "))
 AADD(opcexe, {|| mnu_rjes()} )
 AADD(opc,   Lokal("2. generacija obracuna"))
-AADD(opcexe, {|| Rekalk()})
+AADD(opcexe, {|| mnu_gen()})
 AADD(opc,   Lokal("3. unos/pregled podataka nakon generacije"))
 AADD(opcexe, {|| Unos()})
 AADD(opc,   Lokal("4. izvjestaji"))
@@ -156,15 +157,12 @@ AADD(opc,   Lokal("8. promjena sifre radnika/preduzeca "))
 AADD(opcexe, {|| PromSif()})
 AADD(opc,   Lokal("9. definisanje parametara obracuna "))
 AADD(opcexe, {|| DefinisiObr()})
-
 AADD(opc,"------------------------------------")
 AADD(opcexe, nil)
 AADD(opc,   Lokal("7. sifrarnici"))
 AADD(opcexe, {|| mnu_sifre()})
 AADD(opc,   Lokal("9. administriranje baze podataka")) 
 AADD(opcexe, {|| MnuAdmin()})
-AADD(opc,"------------------------------------")
-AADD(opcexe, nil)
 AADD(opc,"------------------------------------")
 AADD(opcexe, nil)
 AADD(opc,   Lokal("X. parametri     "))
@@ -223,6 +221,8 @@ O_PARAMS
 SetFmkSGVars()
 
 //SetLDSpecifVars()
+O_PARAMS
+select params
 
 public cSection:="1"
 public cHistory:=" "
@@ -275,6 +275,8 @@ public gZastitaObracuna:=IzFmkIni("LD","ZastitaObr","N",KUMPATH)
 public gMinRata:=150
 public gBrRjes:='"02-01/8-124-"+Bez0(RIGHT(radkr->naosnovu,6))'
 public gTxtRTf:="T"
+public gVarObracun:=" "
+public gDoprLimit := 345.00
 
 RPar("m3",@gMinRata)
 Rpar("#1",@gBrRjes)
@@ -317,6 +319,8 @@ Rpar("vs",@gVarSpec)
 Rpar("Si",@gSihtarica)
 Rpar("z2",@gZaok2)
 Rpar("zo",@gZaok)
+Rpar("ov",@gVarObracun)
+Rpar("rl",@gDoprLimit)
 
 select (F_PARAMS)
 use

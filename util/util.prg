@@ -1,5 +1,55 @@
 #include "porld.ch"
 
+
+// ----------------------------------------
+// izracunava bruto osnovu 
+// ----------------------------------------
+function bruto_osn( nNeto )
+local nBo := 0
+
+if gVarObracun == "2"
+	// gleda se limit doprinosa
+	nBo := ROUND2( parobr->k3/100 * MAX(nNeto, parobr->minld), gZaok2 )
+
+else
+	nBo := ROUND2( parobr->k3/100 * MAX(nNeto, parobr->prosld * gPDLimit/100), gZaok2 )	
+endif
+
+return nBo
+
+// ----------------------------------------
+// ispisuje bruto osnovu 
+// ----------------------------------------
+function bruto_isp( nNeto )
+local nBo := 0
+local cRet := ""
+
+nBO := bruto_osn( nNeto )
+
+if gVarObracun == "2"
+	// gleda se limit doprinosa
+	cRet := "bruto osnovica = "
+	if ( nNeto < gDoprLimit )
+		cRet += ALLTRIM(STR(parobr->minld))
+	else
+		cRet += ALLTRIM(STR(nNeto))
+	endif
+	cRet += " * " 
+	cRet += ALLTRIM(STR( parobr->k3 / 100 )) 
+	cRet += " = "
+	cRet += ALLTRIM(STR( nBO ))
+else
+	cRet := "bruto osnovica = "
+	cRet += ALLTRIM(STR(nNeto))
+	cRet += " * " 
+	cRet += ALLTRIM(STR( parobr->k3 / 100 )) 
+	cRet += " = "
+	cRet += ALLTRIM(STR( nBO ))
+endif
+
+return cRet
+
+
 function VisePuta()
 
 cMjesec  := gMjesec

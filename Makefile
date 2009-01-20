@@ -21,5 +21,5 @@ cleanall:
 	make -C util clean
 	make -C exe clean
 
-ld:   cleanall  liball
+porld:   cleanall  liball
 

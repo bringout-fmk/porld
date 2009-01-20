@@ -634,7 +634,7 @@ return aVrati
 function IzracDopr(cDopr)
  LOCAL nArr:=SELECT(), nDopr:=0, nPom:=0, nPom2:=0, nPom0:=0, nBO:=0
   ParObr(mjesec,IF(lViseObr,cObracun,),cIdRj)
-  nBo:=round2(parobr->k3/100*MAX(_UNeto,PAROBR->prosld*gPDLimit/100),gZaok2)
+  nBo:=bruto_osn(_UNeto) 
   SELECT DOPR; GO TOP
   DO WHILE !EOF()  // doprinosi
    IF !(id $ cDopr); SKIP 1; LOOP; ENDIF
