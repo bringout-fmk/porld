@@ -1,0 +1,40 @@
+BRISI.............fions             BRISIMJ...........fions
+BRUTO.............fions             CLVBOX............util
+DEFINISIOB........fions             FILL..............fions
+FILLBRBOD.........fions             FILLKMINRA........fions
+FILLR.............fions             FILLVPOSLA........fions
+GENNAK............fions             GETR..............fions
+HELPOBR...........util              IZRACUNAJ.........fions
+LDPOLJAINI........util              OKUMUL............util
+PAROBR............fions             PAROBRACUN........prijava
+PREDHODNI.........fions             PRIMLD............fions
+PRIMSM............fions             PROMSIF...........fions
+PROSJ1............fions             PROSJ3............fions
+REKALK............fions             REKALKA...........fions
+REKALKPR2.........fions             REKALKPRIM........fions
+REKALKS...........fions             TESTVISEOB........util
+TPIMAPO...........fions             UBACIPREFI........fions
+UKRADNIK..........fions             UPRIM.............fions
+URPRIM............fions             URSATI............fions
+USATI.............fions             VALOBR............util
+VISEPUTA..........util              V_FRJES...........util
+V_FSPEC...........util              ZAKLJUCIOB........fions
+
+
+prijava           Offset: 00000010H  Code and data size: 6e5H
+  PAROBRACUN      
+
+fions             Offset: 00000ac0H  Code and data size: 8e0cH
+  BRISI             BRISIMJ           BRUTO             DEFINISIOB
+  FILL              FILLBRBOD         FILLKMINRA        FILLR
+  FILLVPOSLA        GENNAK            GETR              IZRACUNAJ
+  PAROBR            PREDHODNI         PRIMLD            PRIMSM
+  PROMSIF           PROSJ1            PROSJ3            REKALK
+  REKALKA           REKALKPR2         REKALKPRIM        REKALKS
+  TPIMAPO           UBACIPREFI        UKRADNIK          UPRIM
+  URPRIM            URSATI            USATI             ZAKLJUCIOB
+
+util              Offset: 0000aab0H  Code and data size: 1343H
+  CLVBOX            HELPOBR           LDPOLJAINI        OKUMUL
+  TESTVISEOB        VALOBR            VISEPUTA          V_FRJES
+  V_FSPEC         
