@@ -4,6 +4,7 @@
 #include "c:\re\ld\ec52.ch"
 #endif
 
+
 #ifdef CPOR
   #define _LR_  13
 #else
