@@ -2,6 +2,36 @@
 
 #define  RADNIK  radn->(padr(  trim(naz)+" ("+trim(imerod)+") "+ime,35))
 
+
+
+// ------------------------------------------------
+// vraca ukupno doprinosa IZ plate, 1X
+// ------------------------------------------------
+function u_dopr_iz( nDopOsn, cRTipRada )
+
+select dopr
+go top
+	
+nU_dop_iz := 0
+
+do while !eof()
+
+	// preskoci zbirne doprinose
+	if dopr->id <> "1X"
+		skip
+		loop 
+	endif
+
+	nU_dop_iz += round2((iznos/100) * nDopOsn, gZaok2)
+			
+	skip 1
+		
+enddo
+
+return nU_dop_iz
+
+
+
 function PrikPrimanje()
 local nIznos:=0
 IF "U" $ TYPE("cLMSK"); cLMSK:=""; ENDIF
@@ -1427,6 +1457,9 @@ return
 function KartPl(cIdRj,cMjesec,cGodina,cIdRadn,cObrac)
 local i,aNeta:={}
 nRRSati:=0
+nLOdbitak:=0
+cRTipRada := ""
+nKLO := 0
 lSkrivena:=.f.
 lRadniSati:=.f.
 cLMSK:=""
@@ -1616,6 +1649,12 @@ do while !eof() .and. cgodina==godina .and. idrj=cidrj .and. cmjesec=mjesec .and
  cPrikDopr := IzFmkIni("LD","DoprNaKartPl","D",KUMPATH)
  lPrikSveDopr := .f.
 
+ if gVarObracun == "2"
+ 	nKLO := radn->klo
+	nROdbitak := nKLO * 300
+	cRTipRada := radn->tiprada
+ endif
+
  IF cPrikDopr == "D"; lPrikSveDopr := .t.; ENDIF
 
  if gPrBruto<>"X"
@@ -1762,6 +1801,13 @@ do while !eof() .and. cgodina==godina .and. idrj=cidrj .and. cmjesec=mjesec .and
          ?? "",gValuta
          ? m
 
+	 if gVarObracun == "2"
+	 	? cLMSK+"UKUPNO LICNI ODBICI"
+		@ prow(),60+LEN(cLMSK) SAY nROdbitak pict gpici
+		?? "", gValuta
+		? m
+	 endif
+
          if cVarijanta=="5"
            select ldsm
            hseek "1"+str(_godina,4)+str(_mjesec,2)+_idradn+_idrj
@@ -1803,8 +1849,14 @@ do while !eof() .and. cgodina==godina .and. idrj=cidrj .and. cmjesec=mjesec .and
           if !used(); O_KBENEF; endif
 
           m:=cLMSK+"----------------------- -------- ------------- -------------"
-          nBO:=0
-          nBO:=bruto_osn( _UNeto )
+          altd()
+
+	  nBO:=0
+          nBO:=bruto_osn( _UNeto, cRTipRada, nROdbitak )
+
+	  nDoprIz := u_dopr_iz( nBO )
+	  nOporDoh := nBO - nDoprIZ
+	  nPorOsnova := nOporDoh - nROdbitak
 
 	  select por; go top
           
@@ -1819,9 +1871,19 @@ do while !eof() .and. cgodina==godina .and. idrj=cidrj .and. cmjesec=mjesec .and
             ? cLMSK+id,"-",naz
             @ prow(),pcol()+1 SAY iznos pict "99.99%"
             nC1:=pcol()+1
-            @ prow(),pcol()+1 SAY MAX(_UNeto,PAROBR->prosld*gPDLimit/100) pict gpici
-            @ prow(),pcol()+1 SAY nPom:=max(dlimit,round(iznos/100*MAX(_UNeto,PAROBR->prosld*gPDLimit/100),gZaok2)) pict gpici
-            nPor+=nPom
+            if gVarObracun == "2"
+	    	if por->portip == "B"
+            		@ prow(),pcol()+1 SAY nPorOsnova pict gpici
+			@ prow(),pcol()+1 SAY nPom:=max(dlimit,round(iznos/100*nPorOsnova, gZaok2)) pict gpici
+		else
+            		@ prow(),pcol()+1 SAY MAX(_UNeto,PAROBR->prosld*gPDLimit/100) pict gpici
+			@ prow(),pcol()+1 SAY nPom:=max(dlimit,round(iznos/100*MAX(_UNeto,PAROBR->prosld*gPDLimit/100),gZaok2)) pict gpici
+            	endif
+	    else
+            	@ prow(),pcol()+1 SAY MAX(_UNeto,PAROBR->prosld*gPDLimit/100) pict gpici
+	    	@ prow(),pcol()+1 SAY nPom:=max(dlimit,round(iznos/100*MAX(_UNeto,PAROBR->prosld*gPDLimit/100),gZaok2)) pict gpici
+	    endif
+	    nPor+=nPom
             skip
           enddo
           if radn->porol<>0  .and. gDaPorOl=="D" .and. !Obr2_9()  // poreska olaksica
@@ -1855,7 +1917,7 @@ do while !eof() .and. cgodina==godina .and. idrj=cidrj .and. cmjesec=mjesec .and
            
 	   select ld
 	   ?
-           ? bruto_isp(_UNeto)
+           ? bruto_isp( _UNeto, cRTipRada, nROdbitak )
            ?
            m:=cLMSK+"----------------------- -------- ------------- -------------"
            select dopr; go top
@@ -2539,8 +2601,14 @@ for i:=1 to cLDPolja
 next
 
 nT1:=nT2:=nT3:=nT4:=0
+nBO := 0
 nUNeto:=0
 nUNetoOsnova := 0
+nUPorOsnova:=0
+nPorOsnova:=0
+nRKLO := 0
+nROdbitak := 0
+cRTipRada := ""
 nZaBrutoOsnova := 0
 nUIznos:=nUSati:=nUOdbici:=nUOdbiciP:=nUOdbiciM:=0
 nLjudi:=0
@@ -2589,9 +2657,38 @@ do while !eof() .and. eval(bUSlov)
    		skip 1
 		loop
  	endif
+	
+	nRKLO := 0
+	cRTipRada := ""
+	nROdbitak := 0
+
+	if gVarObracun=="2"
+		// koeficijent odbitka
+		nRKLO := radn->klo
+		nROdbitak := nRKLO * 300
+		cRTipRada := radn->tiprada
+	endif
 
  	_ouneto:=MAX(_uneto,PAROBR->prosld*gPDLimit/100)
- 	
+ 
+	if gVarObracun=="2"
+		
+		// bruto osnova
+		nBrt := bruto_osn( _ouneto, cRTipRada, nROdbitak )
+		
+		nBo += nBrt
+
+		// doprinosi iz su ?
+		nDoprIz := u_dopr_iz( nBrt )
+		
+		// oporezivi dohodak
+		nOporDoh := nBrt - nDoprIz
+
+		// osnova za obracun poreza
+		nPorOsnova := (nOporDoh - nROdbitak )
+		nUPorOsnova += nPorOsnova
+	endif
+
 	select por
 	go top
  
@@ -2600,14 +2697,29 @@ do while !eof() .and. eval(bUSlov)
  
  	// prodji kroz poreze
  	do while !eof()  
+
    		PozicOps(POR->poopst)
-   		IF !ImaUOp("POR",POR->id)
+   		
+		IF !ImaUOp("POR",POR->id)
      			SKIP 1
 			LOOP
    		ENDIF
-   		nPor+=round2(max(dlimit,iznos/100*_oUNeto),gZaok2)
-   		skip
- 	enddo
+   		
+		if gVarObracun == "2"
+			
+			if por->portip == "B"
+				// osnova za obracun poreza kod "B"
+				nPor+=round2(max(dlimit,iznos/100*nPorOsnova),gZaok2)
+			else
+				nPor+=round2(max(dlimit,iznos/100*_oUNeto),gZaok2)
+			endif
+		else
+			nPor+=round2(max(dlimit,iznos/100*_oUNeto),gZaok2)
+   		endif
+		
+		skip
+ 	
+	enddo
  	
 	if radn->porol<>0 .and. gDaPorOl=="D" .and. !Obr2_9() 
 		// poreska olaksica
@@ -2626,37 +2738,44 @@ do while !eof() .and. eval(bUSlov)
  	endif
 
  	// napuni datoteku OPSLD
- 	select ops
+ 	
+	if gVarObracun == "2"
+		nZaOps := nPorOsnova
+	else
+		nZaOps := _ouneto
+	endif
+
+	select ops
 	seek radn->idopsst
  	select opsld
  	seek "1"+radn->idopsst
  	if found()
-   		replace iznos with iznos+_ouneto, iznos2 with iznos2+nPorOl, ljudi with ljudi+1
+   		replace iznos with iznos+nZaOps, iznos2 with iznos2+nPorOl, ljudi with ljudi+1
  	else
    		append blank
    		replace id with "1", idops with radn->idopsst, ;
-			iznos with _ouneto,;
+			iznos with nZaOps,;
                         iznos2 with iznos2+nPorOl, ljudi with 1
  	endif
  	seek "3"+ops->idkan
  	if found()
-   		replace iznos with iznos+_ouneto, ;
+   		replace iznos with iznos+nZaOps, ;
 			iznos2 with iznos2+nPorOl, ;
 			ljudi with ljudi+1
  	else
    		append blank
    		replace id with "3", idops with ops->idkan, ;
-		iznos with _ouneto,;
+		iznos with nZaOps,;
                 iznos2 with iznos2+nPorOl, ljudi with 1
  	endif
  	seek "5"+ops->idn0
  	if found()
-   		replace iznos with iznos+_ouneto, ;
+   		replace iznos with iznos+nZaOps, ;
 		iznos2 with iznos2+nPorOl, ljudi with ljudi+1
  	else
    		append blank
    		replace id with "5", idops with ops->idn0, ;
-			iznos with _ouneto,;
+			iznos with nZaOps,;
                         iznos2 with iznos2+nPorOl, ljudi with 1
  	endif
  	select ops
@@ -2664,31 +2783,31 @@ do while !eof() .and. eval(bUSlov)
  	select opsld
  	seek "2"+radn->idopsrad
  	if found()
-   		replace iznos with iznos+_ouneto, ;
+   		replace iznos with iznos+nZaOps, ;
 		iznos2 with iznos2+nPorOl , ljudi with ljudi+1
  	else
    		append blank
    		replace id with "2", idops with radn->idopsrad, ;
-			iznos with _ouneto,;
+			iznos with nZaOps,;
                         iznos2 with iznos2+nPorOl, ljudi with 1
  	endif
  	seek "4"+ops->idkan
  	if found()
-   		replace iznos with iznos+_ouneto, ;
+   		replace iznos with iznos+nZaOps, ;
 		iznos2 with iznos2+nPorOl, ljudi with ljudi+1
  	else
    		append blank
    		replace id with "4", idops with ops->idkan, ;
-			iznos with _ouneto,;
+			iznos with nZaOps,;
                         iznos2 with iznos2+nPorOl, ljudi with 1
  	endif
  	seek "6"+ops->idn0
  	if found()
-   		replace iznos with iznos+_ouneto, ;
+   		replace iznos with iznos+nZaOps, ;
 		iznos2 with iznos2+nPorOl, ljudi with ljudi+1
  	else
    		append blank
-   		replace id with "6", idops with ops->idn0, iznos with _ouneto,;
+   		replace id with "6", idops with ops->idn0, iznos with nZaOps,;
                         iznos2 with iznos2+nPorOl, ljudi with 1
  	endif
  	
@@ -2724,13 +2843,15 @@ do while !eof() .and. eval(bUSlov)
 	// ukupno sati
  	nUNeto+=_UNeto  // ukupno neto iznos
  	nUNetoOsnova += _oUNeto  // ukupno neto osnova za obracun por.i dopr.
+	
 	// izracunaj bruto osnovicu za obracun varijanta 2
+	
 	if ( _oUNeto < parobr->minld )
 		nZaBrutoOsnova += parobr->minld
 	else
 		nZaBrutoOsnova += _oUNeto
 	endif
-
+	
  	cTR := IF( RADN->isplata$"TR#SK", RADN->idbanka,;
                                    SPACE(LEN(RADN->idbanka)) )
 
@@ -2996,22 +3117,21 @@ IF !lGusto
   ?
 ENDIF
 
-nBO := 0
-
-if gVarObracun == "2"
-	// ovdje uzmi osnovicu namjenjenu ovoj varijanti
-	nBO := bruto_osn( nZaBrutoOsnova )
-	? bruto_isp(nZaBrutoOsnova)
-else
+if gVarObracun <> "2"
+	? m
 	nBO := bruto_osn( nUNetoOsnova )
-	? bruto_isp(nUNetoOsnova)
+	? bruto_isp( nUNetoOsnova )
+	? m
+else
+   	? m
+	?  "BRUTO OSNOVICA"
+	@ prow(),60 SAY nBO pict gpici
+	? m
 endif
-
-@ prow(),pcol()+1 SAY nBo  pict gpici
 
 ?
 
- IF cUmPD=="D"
+IF cUmPD=="D"
    IF cMjesec==1
      cGodina2:=cGodina-1; cMjesec2:=12
    ELSE
@@ -3067,7 +3187,18 @@ endif
       IF !ImaUOp("POR",POR->id)
         SKIP 1; LOOP
       ENDIF
-      nPor+=round2(max(dlimit,iznos/100*MAX(_UNeto,PAROBR->prosld*gPDLimit/100)),gZaok2)
+      if gVarObracun == "2"
+        nBruto := bruto_osn( _UNETO, radn->tiprada, radn->klo * 300 )
+	nDopIz := u_dopr_iz( nBruto )
+	nOsnova := nBruto - nDopIZ - (radn->klo * 300)
+      	if por->portip == "B"
+		nPor+=round2(max(dlimit,iznos/100*MAX(nOsnova,PAROBR->prosld*gPDLimit/100)),gZaok2)
+      	else
+      		nPor+=round2(max(dlimit,iznos/100*MAX(_UNeto,PAROBR->prosld*gPDLimit/100)),gZaok2)
+	endif
+      else
+      	nPor+=round2(max(dlimit,iznos/100*MAX(_UNeto,PAROBR->prosld*gPDLimit/100)),gZaok2)
+      endif
       skip
     enddo
     if radn->porol<>0 .and. gDaPorOl=="D" .and. !Obr2_9() // poreska olaksica
@@ -3086,30 +3217,34 @@ endif
 
     //**** nafiluj datoteku OPSLD *********************
     _uneto:=MAX(_uneto,PAROBR->prosld*gPDLimit/100)
+    nZaPor := _uneto
+    if gVarObracun == "2"
+    	nZaPor := nOsnova
+    endif
     select ops; seek radn->idopsst
     select opsld
     seek "1"+radn->idopsst
     if found()
-      replace piznos with piznos+_uneto, piznos2 with piznos2+nPorOl, pljudi WITH pljudi+1
+      replace piznos with piznos+nZaPor, piznos2 with piznos2+nPorOl, pljudi WITH pljudi+1
     else
       append blank
-      replace id with "1", idops   with radn->idopsst, piznos with _uneto,;
+      replace id with "1", idops   with radn->idopsst, piznos with nZaPor,;
                            piznos2 with piznos2+nPorOl, pljudi WITH 1
     endif
     seek "3"+ops->idkan  // kanton stanovanja
     if found()
-      replace piznos with piznos+_uneto, piznos2 with piznos2+nPorOl, pljudi WITH pljudi+1
+      replace piznos with piznos+nZaPor, piznos2 with piznos2+nPorOl, pljudi WITH pljudi+1
     else
       append blank
-      replace id with "3", idops   with ops->idkan, piznos with _uneto,;
+      replace id with "3", idops   with ops->idkan, piznos with nZaPor,;
                            piznos2 with piznos2+nPorOl, pljudi WITH 1
     endif
     seek "5"+ops->idn0  // entitet stanovanja
     if found()
-      replace piznos with piznos+_uneto, piznos2 with piznos2+nPorOl, pljudi WITH pljudi+1
+      replace piznos with piznos+nZaPor, piznos2 with piznos2+nPorOl, pljudi WITH pljudi+1
     else
       append blank
-      replace id with "5", idops   with ops->idn0, piznos with _uneto,;
+      replace id with "5", idops   with ops->idn0, piznos with nZaPor,;
                            piznos2 with piznos2+nPorOl, pljudi WITH 1
     endif
 
@@ -3118,26 +3253,26 @@ endif
     select opsld
     seek "2"+radn->idopsrad
     if found()
-      replace piznos with piznos+_uneto, piznos2 with piznos2+nPorOl, pljudi WITH pljudi+1
+      replace piznos with piznos+nZaPor, piznos2 with piznos2+nPorOl, pljudi WITH pljudi+1
     else
       append blank
-      replace id with "2", idops   with radn->idopsrad, piznos with _uneto,;
+      replace id with "2", idops   with radn->idopsrad, piznos with nZaPor,;
                            piznos2 with piznos2+nPorOl, pljudi WITH 1
     endif
     seek "4"+ops->idkan  // kanton rada
     if found()
-      replace piznos with piznos+_uneto, piznos2 with piznos2+nPorOl, pljudi WITH pljudi+1
+      replace piznos with piznos+nZaPor, piznos2 with piznos2+nPorOl, pljudi WITH pljudi+1
     else
       append blank
-      replace id with "4", idops   with ops->idkan, piznos with _uneto,;
+      replace id with "4", idops   with ops->idkan, piznos with nZaPor,;
                            piznos2 with piznos2+nPorOl, pljudi WITH 1
     endif
     seek "6"+ops->idn0  // entitet rada
     if found()
-      replace piznos with piznos+_uneto, piznos2 with piznos2+nPorOl, pljudi WITH pljudi+1
+      replace piznos with piznos+nZaPor, piznos2 with piznos2+nPorOl, pljudi WITH pljudi+1
     else
       append blank
-      replace id with "6", idops   with ops->idn0, piznos with _uneto,;
+      replace id with "6", idops   with ops->idn0, piznos with nZaPor,;
                            piznos2 with piznos2+nPorOl, pljudi WITH 1
     endif
     ********************************
@@ -3267,8 +3402,18 @@ do while !eof()
      endif
      ? m
    else
-     @ prow(),nc1 SAY nUNeto pict gpici
-     @ prow(),pcol()+1 SAY nPom:=round2(max(dlimit,iznos/100*nUNeto),gZaok2) pict gpici
+     if gVarObracun == "2"
+      if por->portip == "B"
+     	@ prow(),nc1 SAY nUPorOsnova pict gpici
+     	@ prow(),pcol()+1 SAY nPom:=round2(max(dlimit,iznos/100*nUPorOsnova),gZaok2) pict gpici
+      else
+      	@ prow(),nc1 SAY nUNeto pict gpici
+     	@ prow(),pcol()+1 SAY nPom:=round2(max(dlimit,iznos/100*nUNeto),gZaok2) pict gpici
+      endif
+     else
+     	@ prow(),nc1 SAY nUNeto pict gpici
+     	@ prow(),pcol()+1 SAY nPom:=round2(max(dlimit,iznos/100*nUNeto),gZaok2) pict gpici
+     endif
      if cUmPD=="D"
        @ prow(),pcol()+1 SAY nPom2:=round2(max(dlimit,iznos/100*nUNeto2),gZaok2) pict gpici
        @ prow(),pcol()+1 SAY nPom-nPom2 pict gpici

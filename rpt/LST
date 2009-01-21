@@ -24,29 +24,30 @@ SORTVAR...........izvj              SPECIFPOMJ........specif
 SPECNOVCAN........izvj2             SVRATIUFAJ........izvj
 TAGVO.............izvj              TEKREC2...........specif
 U2KOLONE..........izvj              UKARTPL...........izvj
-ZAGLKAR...........izvj              ZPLATSP...........izvj
-ZPREGPL...........izvj              ZPREGPRIM.........izvj
-ZPREGPRIMP........izvj2             
+U_DOPR_IZ.........izvj              ZAGLKAR...........izvj
+ZPLATSP...........izvj              ZPREGPL...........izvj
+ZPREGPRIM.........izvj              ZPREGPRIMP........izvj2
+
 
 mnu_izvj          Offset: 00000010H  Code and data size: 768H
   MNUIZVJ           MNUIZVK           MNUIZVR           MNUIZVS
   MNUIZVZ         
 
-izvj              Offset: 00000c00H  Code and data size: 16f3eH
+izvj              Offset: 00000c00H  Code and data size: 17705H
   BHSORT            FFOR4             FFOR43            FSVAKI4
   IMAUOP            ISPISFIRME        ISPISOBR          KARTPL
   KUMPRIM           NLJUDI            OBR2_9            PLATSP
   POZICOPS          PREGPL            PREGPRIM          PRIKPRIMAN
   REKAP             REKAPLD           REKNETO           SCATTERS
   SORTPREZ          SORTVAR           SVRATIUFAJ        TAGVO
-  U2KOLONE          UKARTPL           ZAGLKAR           ZPLATSP
-  ZPREGPL           ZPREGPRIM       
+  U2KOLONE          UKARTPL           U_DOPR_IZ         ZAGLKAR
+  ZPLATSP           ZPREGPL           ZPREGPRIM       
 
-izvj2             Offset: 00019100H  Code and data size: 524cH
+izvj2             Offset: 00019940H  Code and data size: 524cH
   IZOBDOP           IZRACDOPR         PREGPRIMPE        SORTPRE2
   SPECNOVCAN        ZPREGPRIMP      
 
-specif            Offset: 0001edc0H  Code and data size: 2bf9H
+specif            Offset: 0001f600H  Code and data size: 2bf9H
   ASEZONA2          CIJELIH           DECIMALA          FFOR3
   FORMNUM1          FORMNUM2          FSVAKI3           IZREZI
   NAZMJESECA        PODOIZSEZ         PRAVIMTEMP        PRNKOD_OFF

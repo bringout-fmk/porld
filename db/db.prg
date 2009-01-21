@@ -159,6 +159,7 @@ Skloni(KUMPATH,"RADN.DBF",cSezona,finverse,fda,fnul)
 Skloni(KUMPATH,"RADKR.DBF",cSezona,finverse,fda,fnul)
 Skloni(KUMPATH,"RJ.DBF",cSezona,finverse,fda,fnul)
 Skloni(KUMPATH,"LD.DBF",cSezona,finverse,fda,fnul)
+Skloni(KUMPATH,"RJES.DBF",cSezona,finverse,fda,fnul)
 Skloni(KUMPATH,"KPARAMS.DBF",cSezona,finverse,fda,fnul)
 Skloni(KUMPATH,"NORSIHT.DBF",cSezona,finverse,fda,fnul)
 Skloni(KUMPATH,"FMK.INI",cSezona,finverse,fda,fnul)
@@ -213,6 +214,7 @@ public gaDbfs := {;
 { F_LD     ,"LD"      , P_KUMPATH     },;
 { F_RADKR  ,"RADKR"   , P_KUMPATH     },;
 { F_RADN   ,"RADN"    , P_KUMPATH     },;
+{ F_RJES   ,"RJES"    , P_KUMPATH     },;
 { F_RJ     ,"RJ"      , P_KUMPATH     },;
 { F_POR    ,"POR"     , P_SIFPATH     },;
 { F_DOPR   ,"DOPR"    , P_SIFPATH     },;
@@ -275,6 +277,10 @@ AADD(aDBf,{ 'IME'                 , 'C' ,  15 ,  0 })
 AADD(aDBf,{ 'IDSTRSPR'            , 'C' ,   3 ,  0 })
 AADD(aDBf,{ 'IDOPSST'             , 'C' ,   4 ,  0 })
 AADD(aDBf,{ 'IDOPSRAD'            , 'C' ,   4 ,  0 })
+
+AADD(aDBf,{ 'TIPRADA'             , 'C' ,   1 ,  0 })
+AADD(aDBf,{ 'KLO'                 , 'N' ,   5 ,  2 })
+
 AADD(aDBf,{ 'POL'                 , 'C' ,   1 ,  0 })
 AADD(aDBf,{ 'MATBR'               , 'C' ,  13 ,  0 })
 AADD(aDBf,{ 'DATOD'               , 'D' ,   8 ,  0 })
@@ -405,11 +411,14 @@ if !file(SIFPATH+"PAROBR.DBF")
    AADD(aDBf,{ 'NAZ'                 , 'C' ,  10 ,  0 })
    AADD(aDBf,{ 'IDRJ'                , 'C' ,   2 ,  0 })
    AADD(aDBf,{ 'VrBod'               , 'N' ,  15 ,  5 })
-   AADD(aDBf,{ 'K1'                  , 'N' ,   11 ,  6 })
-   AADD(aDBf,{ 'K2'                  , 'N' ,   11 ,  6 })
+   AADD(aDBf,{ 'K1'                  , 'N' ,  11 ,  6 })
+   AADD(aDBf,{ 'K2'                  , 'N' ,  11 ,  6 })
    AADD(aDBf,{ 'K3'                  , 'N' ,   9 ,  5 })
    AADD(aDBf,{ 'K4'                  , 'N' ,   6 ,  3 })
+   AADD(aDBf,{ 'K5'                  , 'N' ,  11 ,  6 })
+   AADD(aDBf,{ 'K6'                  , 'N' ,  11 ,  6 })
    AADD(aDBf,{ 'PROSLD'              , 'N' ,  12 ,  2 })
+   AADD(aDBf,{ 'MINLD'               , 'N' ,  12 ,  2 })
    DBCREATE2(SIFPATH+'PAROBR.DBF',aDbf)
 endif
 
@@ -506,6 +515,7 @@ if !file(SIFPATH+"POR.DBF")
    AADD(aDBf,{ 'IZNOS'               , 'N' ,   5 ,  2 })
    AADD(aDBf,{ 'DLIMIT'              , 'N' ,  12 ,  2 })
    AADD(aDBf,{ 'POOPST'              , 'C' ,   1 ,  0 })
+   AADD(aDBf,{ 'PORTIP'              , 'C' ,   1 ,  0 })
    DBCREATE2(SIFPATH+'POR.DBF',aDbf)
 endif
 

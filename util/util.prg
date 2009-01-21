@@ -4,13 +4,24 @@
 // ----------------------------------------
 // izracunava bruto osnovu 
 // ----------------------------------------
-function bruto_osn( nNeto )
+function bruto_osn( nNeto, cTipRada, nOdbitak )
 local nBo := 0
 
+if cTipRada == nil
+	cTipRada := ""
+endif
+if nOdbitak == nil
+	nOdbitak := 0
+endif
+altD()
 if gVarObracun == "2"
-	// gleda se limit doprinosa
-	nBo := ROUND2( parobr->k3/100 * MAX(nNeto, parobr->minld), gZaok2 )
-
+	if cTipRada == "I"
+		// gleda se limit doprinosa
+		nBo := ROUND2( parobr->k6 * MAX(nNeto, parobr->minld), gZaok2 )
+	else
+		// gleda se limit doprinosa
+		nBo := ROUND2( parobr->k5 * MAX(nNeto, parobr->minld), gZaok2 )
+	endif
 else
 	nBo := ROUND2( parobr->k3/100 * MAX(nNeto, parobr->prosld * gPDLimit/100), gZaok2 )	
 endif
@@ -20,11 +31,18 @@ return nBo
 // ----------------------------------------
 // ispisuje bruto osnovu 
 // ----------------------------------------
-function bruto_isp( nNeto )
+function bruto_isp( nNeto, cRTipRada, nOdbitak )
 local nBo := 0
 local cRet := ""
 
-nBO := bruto_osn( nNeto )
+if cRTipRada == nil
+	cRTipRada := ""
+endif
+if nOdbitak == nil
+	nOdbitak := 0
+endif
+
+nBO := bruto_osn( nNeto, cRTipRada, nOdbitak )
 
 if gVarObracun == "2"
 	// gleda se limit doprinosa
@@ -35,7 +53,11 @@ if gVarObracun == "2"
 		cRet += ALLTRIM(STR(nNeto))
 	endif
 	cRet += " * " 
-	cRet += ALLTRIM(STR( parobr->k3 / 100 )) 
+	if cRTipRada == "I"
+		cRet += ALLTRIM(STR( parobr->k6  )) 
+	else
+		cRet += ALLTRIM(STR( parobr->k5  )) 
+	endif
 	cRet += " = "
 	cRet += ALLTRIM(STR( nBO ))
 else

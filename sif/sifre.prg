@@ -25,6 +25,11 @@ if radn->(fieldpos("N1"))<>0
   AADD (ImeKol,{ padc("N3",12 ), {|| n3}, "n3" })
 endif
 
+if radn->(fieldpos("KLO"))<>0
+  AADD (ImeKol,{ padc("k.lic.odb",12 ), {|| klo}, "klo" })
+  AADD (ImeKol,{ padc("tip rada",12 ), {|| tiprada}, "tiprada" })
+endif
+
 Kol:={}
 for i:=1 to len(ImeKol)
   AADD(Kol,I)
@@ -106,6 +111,8 @@ Box(,3,50)
 BoxC()
 return .f.
 
+
+
 function P_ParObr(cId,dx,dy)
 private imekol, kol:={}
 
@@ -121,6 +128,13 @@ Kol:={1,2,3,4,5}
 if parobr->(fieldpos("MINLD"))<>0
   AADD (ImeKol,{ padc("min.ld",12 ), {|| minld}, "minld" })
   AADD(Kol,6)
+endif
+
+if parobr->(fieldpos("K5"))<>0 .and. gVarObracun == "2"
+  AADD (ImeKol,{ padc("n.koef.1",12 ), {|| k5}, "k5" })
+  AADD(Kol,7)
+  AADD (ImeKol,{ padc("n.koef.2",12 ), {|| k6}, "k6" })
+  AADD(Kol,8)
 endif
 
 return PostojiSifra(F_PAROBR,1,10,70,"Parametri obracuna",@cId,dx,dy)
@@ -303,6 +317,12 @@ ImeKol:={ { padr("Id",2), {|| id}, "id", {|| .t.}, {|| vpsifra(wid)} },;
           { padr("PoOpst",6), {||  poopst}, "poopst" }           ;
        }
 Kol:={1,2,3,4,5}
+
+if por->(fieldpos("portip"))<>0 .and. gVarObracun == "2"
+  AADD (ImeKol,{ padc("tip por.",12 ), {|| portip}, "portip" })
+  AADD(Kol,6)
+endif
+
 PushWa()
 
 select (F_SIFK)
