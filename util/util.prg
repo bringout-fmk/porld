@@ -1,75 +1,125 @@
 #include "porld.ch"
 
 
-// ----------------------------------------
-// izracunava bruto osnovu 
-// ----------------------------------------
-function bruto_osn( nNeto, cTipRada, nOdbitak )
-local nBo := 0
-
-if cTipRada == nil
-	cTipRada := ""
-endif
-if nOdbitak == nil
-	nOdbitak := 0
-endif
-altD()
-if gVarObracun == "2"
-	if cTipRada == "I"
-		// gleda se limit doprinosa
-		nBo := ROUND2( parobr->k6 * MAX(nNeto, parobr->minld), gZaok2 )
-	else
-		// gleda se limit doprinosa
-		nBo := ROUND2( parobr->k5 * MAX(nNeto, parobr->minld), gZaok2 )
-	endif
-else
-	nBo := ROUND2( parobr->k3/100 * MAX(nNeto, parobr->prosld * gPDLimit/100), gZaok2 )	
-endif
-
-return nBo
 
 // ----------------------------------------
-// ispisuje bruto osnovu 
+// vraca bruto osnovu
+// nIzn - ugovoreni neto iznos
+// cTipRada - vrsta/tip rada
+// nLOdb - iznos licnog odbitka
+// nSKoef - koeficijent kod samostalnih poslodavaca
 // ----------------------------------------
-function bruto_isp( nNeto, cRTipRada, nOdbitak )
-local nBo := 0
-local cRet := ""
+function bruto_osn( nIzn, cTipRada, nLOdb, nSKoef )
+local nBrt := 0
 
-if cRTipRada == nil
-	cRTipRada := ""
-endif
-if nOdbitak == nil
-	nOdbitak := 0
+if nLOdb = nil
+	nLOdb := 0
 endif
 
-nBO := bruto_osn( nNeto, cRTipRada, nOdbitak )
-
-if gVarObracun == "2"
-	// gleda se limit doprinosa
-	cRet := "bruto osnovica = "
-	if ( nNeto < gDoprLimit )
-		cRet += ALLTRIM(STR(parobr->minld))
-	else
-		cRet += ALLTRIM(STR(nNeto))
-	endif
-	cRet += " * " 
-	if cRTipRada == "I"
-		cRet += ALLTRIM(STR( parobr->k6  )) 
-	else
-		cRet += ALLTRIM(STR( parobr->k5  )) 
-	endif
-	cRet += " = "
-	cRet += ALLTRIM(STR( nBO ))
-else
-	cRet := "bruto osnovica = "
-	cRet += ALLTRIM(STR(nNeto))
-	cRet += " * " 
-	cRet += ALLTRIM(STR( parobr->k3 / 100 )) 
-	cRet += " = "
-	cRet += ALLTRIM(STR( nBO ))
+if nSKoef = nil
+	nSKoef := 0
 endif
 
-return cRet
+// stari obracun
+if gVarObracun <> "2"
+	nBrt := ROUND2( nIzn * ( parobr->k3 / 100 ), gZaok2 )
+	return nBrt
+endif
+
+do case
+	// nesamostalni rad
+	case EMPTY(cTipRada)
+		nBrt := ROUND2( nIzn * parobr->k5 ,gZaok2 )
+	
+	// nesamostalni rad, isti neto
+	case cTipRada == "I"
+		nOsn := nIzn
+		
+		// ako je iznos manji od minimalca, uzmi minimalac
+		if ( nIzn < parobr->minld )
+			nOsn := parobr->minld
+		endif
+		
+		// ako je ugovoreni iznos manji od odbitka
+		if (nIzn < nLOdb ) 
+			nBrt := ROUND2( nOsn * parobr->k6, gZaok2 )
+		else
+			nBrt := ROUND2( ( (nOsn - nLOdb) / 0.9 + nLOdb ) ;
+				/ 0.69  ,gZaok2)
+		endif
+
+	// samostalni poslodavci
+	case cTipRada == "S"
+		nBrt := ROUND2( nIzn * nSKoef ,gZaok2 )
+	// nerezidenti
+	case cTipRada == "N"
+		nBrt := ROUND2( nIzn * parobr->k5 , gZaok2 )
+
+endcase
+
+return nBrt
+
+
+// ----------------------------------------
+// ispisuje bruto obracun
+// ----------------------------------------
+function bruto_isp( nNeto, cTipRada, nLOdb, nSKoef )
+local cPrn := ""
+local nBrt := 0
+
+if nLOdb = nil
+	nLOdb := 0
+endif
+
+if nSKoef = nil
+	nSKoef := 0
+endif
+
+// izracunaj bruto
+nBrt := bruto_osn( nNeto, cTipRada, nLOdb, nSKoef )
+
+do case
+	// nesamostalni rad
+	case EMPTY(cTipRada)
+		cPrn := ALLTRIM(STR(nNeto)) + " * " + ;
+			ALLTRIM(STR(parobr->k5)) + " = "
+		cPrn += ALLTRIM(STR(nBrt))
+	// nesamostalni rad - isti neto
+	case cTipRada == "I"
+		
+		nOsn := nNeto
+		
+		if ( nNeto < parobr->minld ) 
+			nOsn := parobr->minld
+		endif
+
+		cPrn := ALLTRIM(STR(nOsn)) + " - " + ALLTRIM(STR(nLOdb)) + ;
+			" / 0.9 + " + ALLTRIM(STR(nLOdb)) + " / 0.69 = "
+		if ( nNeto < nLOdb ) 
+			cPrn := ALLTRIM(STR(nOsn)) + " * " + ;
+				ALLTRIM(STR(parobr->k6)) + " ="
+
+		endif
+		cPrn += ALLTRIM(STR(nBrt))
+
+	// samostalni poslodavci
+	case cTipRada == "S"
+		cPrn := ALLTRIM(STR(nNeto)) + " * " + ;
+			ALLTRIM(STR(nSKoef)) + " ="
+	
+		cPrn += ALLTRIM(STR(nBrt))
+	// nerezidenti
+	case cTipRada == "N"
+		cPrn := ALLTRIM(STR(nNeto)) + " * " + ;
+			ALLTRIM(STR(parobr->k5)) + " ="
+
+		cPrn += ALLTRIM(STR(nBrt))
+endcase
+
+return cPrn
+
+
+
 
 
 function VisePuta()

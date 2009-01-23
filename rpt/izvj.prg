@@ -1849,15 +1849,39 @@ do while !eof() .and. cgodina==godina .and. idrj=cidrj .and. cmjesec=mjesec .and
           if !used(); O_KBENEF; endif
 
           m:=cLMSK+"----------------------- -------- ------------- -------------"
-          altd()
-
-	  nBO:=0
-          nBO:=bruto_osn( _UNeto, cRTipRada, nROdbitak )
+	  nBO := 0
+          nBO := bruto_osn( _UNeto, cRTipRada, nROdbitak )
 
 	  nDoprIz := u_dopr_iz( nBO )
 	  nOporDoh := nBO - nDoprIZ
 	  nPorOsnova := nOporDoh - nROdbitak
 
+	  // ako je minimalac
+	  if ( _UNeto < parobr->minld )	
+	  	nOporDoh := 0
+		nPorOsnova := 0
+	  endif
+	 
+	  select ld
+	  
+	  ?
+          ? "Bruto osnovica = " + bruto_isp( _UNeto, cRTipRada, nROdbitak )
+          ?
+          
+          if gVarObracun == "2"
+		? "Osnovica za porez na dohodak = ( BRUTO - DOPR.IZ - LICNI ODBITAK )"
+		? "  Osnovica za ostale naknade = ( NETO NA RUKE )"
+		?
+	  
+	     if ( _UNeto < parobr->minld )
+	     	? "!!! neto osnovica < minimalca - NEMA POREZA NA DOHODAK "
+	     endif
+
+	  endif
+	  
+
+	  ? "Obracun poreza:"
+	  ? "---------------"
 	  select por; go top
           
 	  nPom:=nPor:=0
@@ -1915,12 +1939,12 @@ do while !eof() .and. cgodina==godina .and. idrj=cidrj .and. cmjesec=mjesec .and
            endif
            if !lSkrivena .and. prow()>55+gPStranica; FF; endif
            
-	   select ld
-	   ?
-           ? bruto_isp( _UNeto, cRTipRada, nROdbitak )
+	   m:=cLMSK+"----------------------- -------- ------------- -------------"
            ?
-           m:=cLMSK+"----------------------- -------- ------------- -------------"
-           select dopr; go top
+	   ? "Obracun doprinosa:"
+	   ? "------------------"
+
+	   select dopr; go top
            nPom:=nDopr:=0
            nC1:=20+LEN(cLMSK)
            do while !eof()
@@ -2686,6 +2710,12 @@ do while !eof() .and. eval(bUSlov)
 
 		// osnova za obracun poreza
 		nPorOsnova := (nOporDoh - nROdbitak )
+
+		// ako je na minimalcu, nema poreza
+		if ( _ouneto < parobr->minld )
+			nPorOsnova := 0
+		endif
+
 		nUPorOsnova += nPorOsnova
 	endif
 
@@ -3120,12 +3150,16 @@ ENDIF
 if gVarObracun <> "2"
 	? m
 	nBO := bruto_osn( nUNetoOsnova )
-	? bruto_isp( nUNetoOsnova )
+	? "Bruto osnovica = " + bruto_isp( nUNetoOsnova )
 	? m
 else
    	? m
-	?  "BRUTO OSNOVICA"
+	?  "BRUTO OSNOVICA = "
 	@ prow(),60 SAY nBO pict gpici
+	? m
+	?
+	? "Osnovica za obracun poreza na dohodak = (BRUTO - DOPR.IZ - LIC.ODBICI)"
+	? "  Osnovica za obracun ostalih naknada = (NETO NA RUKE) "
 	? m
 endif
 
@@ -3179,7 +3213,6 @@ IF cUmPD=="D"
 
 
     // neophodno zbog "po opstinama"
-    ********************************
     select por; go top
     nPor:=nPorOl:=nUPorOl2:=0
     do while !eof()  // datoteka por

@@ -109,9 +109,8 @@ do while .t.
 	endif
 
 	ParObr(cMjesec,IF(lViseObr,cObracun,),cIdRj)  // podesi parametre obra~una za ovaj mjesec
-
-	//select params
-	//Private cSection:="S",cHistory:=" ",aHistory:={}
+	
+	PrikUnos()
 
 	public cFormula:=""
 
@@ -177,6 +176,81 @@ enddo // do while .t.
 
 return
 
+// ------------------------------------
+// prikazi unos podataka
+// ------------------------------------
+function PrikUnos()
+local i
+private cIdTP:="  "
+private nRedTP:=4
+private cVarTP
+private cIznosTP
+cTipPrC:=" "
+
+// potrebno je 14 polja "I" i "S"
+for i:=1 to 14
+	if i < 10
+		cIdTP:="0" + ALLTRIM(STR(i))
+		cVarTP:="_S0"+ALLTRIM(STR(i))
+		cIznosTP:="_I0"+ALLTRIM(STR(i))
+		cPoljeIznos:="I0"+ALLTRIM(STR(i))
+		cPoljeSati:="S0"+ALLTRIM(STR(i))
+	else
+		cIdTP:=ALLTRIM(STR(i))
+		cVarTP:="_S"+ALLTRIM(STR(i))
+		cIznosTP:="_I"+ALLTRIM(STR(i))
+		cPoljeIznos:="I"+ALLTRIM(STR(i))
+		cPoljeSati:="S"+ALLTRIM(STR(i))
+	endif
+	
+	nRedTP++
+	
+	select tippr
+	seek cIdTP
+	select ld
+	
+	if LD->(FieldPos(cPoljeIznos)=0) .and. LD->(FieldPos(cPoljeSati)=0)
+		MsgBeep("Broj polja u LD -> 30, potrebna modifikacija struktura !!!")
+		return	
+	endif
+	
+	cW:="WhUnos("+cm2str(cIdTp)+")"
+	cV:="Izracunaj(@"+cIznosTP+")"
+
+	if (tippr->(FOUND()) .and. tippr->aktivan=="D")
+		if (tippr->fiksan $ "DN")
+      			@ m_x+nRedTP,m_Y+2 SAY tippr->id+"-"+tippr->naz+" (SATI) " GET &cVarTP PICT gPics when &cW valid &cV
+ 		elseif (tippr->fiksan=="P")
+    			@ m_x+nRedTP,m_Y+2 SAY tippr->id+"-"+tippr->naz+" (%)    " GET &cVarTP. PICT "999.99" when &cW valid &cV
+ 		elseif tippr->fiksan=="B"
+    			@ m_x+nRedTP,m_Y+2 SAY tippr->id+"-"+tippr->naz+"(BODOVA)" GET &cVarTP. PICT gPici when &cW valid &cV
+ 		elseif tippr->fiksan=="C"
+    			@ m_x+nRedTP,m_Y+2 SAY tippr->id+"-"+tippr->naz+"        " GET cTipPrC when &cW valid &cV
+		endif
+ 	
+		@ m_x+nRedTP,m_y+50 SAY "IZNOS" GET &cIznosTP PICT gPici
+	endif
+	
+	if (i%17==0)
+		read
+		@ m_x+5,m_y+2 CLEAR TO m_x+21,m_y+69
+		nRedTP:=4
+	endif
+
+	if (i==cLDPolja)
+		read
+	endif
+
+next
+
+return
+
+// --------------------------------------------------
+// validacija WHEN na unosu tipova primanja
+// --------------------------------------------------
+function WhUnos(cTP)
+tippr->(DbSeek(cTP))
+return .t.
 
 
 function PriBris()
