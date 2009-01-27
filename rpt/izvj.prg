@@ -1648,14 +1648,18 @@ do while !eof() .and. cgodina==godina .and. idrj=cidrj .and. cmjesec=mjesec .and
 
  cPrikDopr := IzFmkIni("LD","DoprNaKartPl","D",KUMPATH)
  lPrikSveDopr := .f.
+ cOpor := ""
 
  if gVarObracun == "2"
  	nKLO := radn->klo
 	nROdbitak := nKLO * 300
 	cRTipRada := radn->tiprada
+	cOpor := radn->opor
  endif
 
- IF cPrikDopr == "D"; lPrikSveDopr := .t.; ENDIF
+ IF cPrikDopr == "D"
+ 	lPrikSveDopr := .t.
+ ENDIF
 
  if gPrBruto<>"X"
 
@@ -1854,10 +1858,11 @@ do while !eof() .and. cgodina==godina .and. idrj=cidrj .and. cmjesec=mjesec .and
 
 	  nDoprIz := u_dopr_iz( nBO )
 	  nOporDoh := nBO - nDoprIZ
+
 	  nPorOsnova := nOporDoh - nROdbitak
 
 	  // ako je minimalac
-	  if ( _UNeto < parobr->minld )	
+	  if ( _UNeto < parobr->minld )	.or. cOpor == "N"
 	  	nOporDoh := 0
 		nPorOsnova := 0
 	  endif
@@ -1869,14 +1874,8 @@ do while !eof() .and. cgodina==godina .and. idrj=cidrj .and. cmjesec=mjesec .and
           ?
           
           if gVarObracun == "2"
-		? "Osnovica za porez na dohodak = ( BRUTO - DOPR.IZ - LICNI ODBITAK )"
-		? "  Osnovica za ostale naknade = ( NETO NA RUKE )"
+	  	? "Osnovica za ostale naknade = ( NETO NA RUKE )"
 		?
-	  
-	     if ( _UNeto < parobr->minld )
-	     	? "!!! neto osnovica < minimalca - NEMA POREZA NA DOHODAK "
-	     endif
-
 	  endif
 	  
 
@@ -1892,6 +1891,10 @@ do while !eof() .and. cgodina==godina .and. idrj=cidrj .and. cmjesec=mjesec .and
             IF !ImaUOp("POR",POR->id)
               SKIP 1; LOOP
             ENDIF
+	    if nPorOsnova = 0 .and. por->portip == "B"
+	    	skip
+		loop
+	    endif
             ? cLMSK+id,"-",naz
             @ prow(),pcol()+1 SAY iznos pict "99.99%"
             nC1:=pcol()+1
@@ -2685,12 +2688,14 @@ do while !eof() .and. eval(bUSlov)
 	nRKLO := 0
 	cRTipRada := ""
 	nROdbitak := 0
+	cOpor := ""
 
 	if gVarObracun=="2"
 		// koeficijent odbitka
 		nRKLO := radn->klo
 		nROdbitak := nRKLO * 300
 		cRTipRada := radn->tiprada
+		cOpor := radn->opor
 	endif
 
  	_ouneto:=MAX(_uneto,PAROBR->prosld*gPDLimit/100)
@@ -2712,7 +2717,7 @@ do while !eof() .and. eval(bUSlov)
 		nPorOsnova := (nOporDoh - nROdbitak )
 
 		// ako je na minimalcu, nema poreza
-		if ( _ouneto < parobr->minld )
+		if ( _ouneto < parobr->minld ) .or. cOpor == "N"
 			nPorOsnova := 0
 		endif
 
@@ -2735,6 +2740,12 @@ do while !eof() .and. eval(bUSlov)
 			LOOP
    		ENDIF
    		
+		// ako nema poreske osnove za tip "B"
+		if nPorOsnova = 0 .and. por->portip == "B"
+			skip
+			loop
+		endif
+
 		if gVarObracun == "2"
 			
 			if por->portip == "B"
@@ -3158,8 +3169,7 @@ else
 	@ prow(),60 SAY nBO pict gpici
 	? m
 	?
-	? "Osnovica za obracun poreza na dohodak = (BRUTO - DOPR.IZ - LIC.ODBICI)"
-	? "  Osnovica za obracun ostalih naknada = (NETO NA RUKE) "
+	? "Osnovica za obracun ostalih naknada = (NETO NA RUKE) "
 	? m
 endif
 
@@ -3422,7 +3432,6 @@ do while !eof()
    if !empty(poopst)
      ? m
      ? "Ukupno:"
-//     @ prow(),nc1 SAY nUNeto pict gpici
      @ prow(),nc1 SAY nOOP pict gpici
      @ prow(),pcol()+1 SAY nPorOps   pict gpici
      if cUmPD=="D"
@@ -3430,7 +3439,6 @@ do while !eof()
        @ prow(),pcol()+1 SAY nPorOps-nPorOps2   pict gpici
        Rekapld("POR"+por->id,cgodina,cmjesec,nPorOps-nPorOps2,0,,NLjudi())
      else
-//       Rekapld("POR"+por->id,cgodina,cmjesec,nPorOps,nUNeto,,NLjudi())
        Rekapld("POR"+por->id,cgodina,cmjesec,nPorOps,nOOP,,"("+ALLTRIM(STR(nPOLjudi))+")")
      endif
      ? m

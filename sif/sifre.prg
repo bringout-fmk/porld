@@ -30,6 +30,10 @@ if radn->(fieldpos("KLO"))<>0
   AADD (ImeKol,{ padc("tip rada",12 ), {|| tiprada}, "tiprada" })
 endif
 
+if radn->(fieldpos("OPOR"))<>0
+  AADD (ImeKol,{ padc("oporeziv",12 ), {|| opor}, "opor" })
+endif
+
 Kol:={}
 for i:=1 to len(ImeKol)
   AADD(Kol,I)

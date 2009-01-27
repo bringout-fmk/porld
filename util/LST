@@ -35,7 +35,7 @@ fions             Offset: 00000ac0H  Code and data size: 8db0H
   TPIMAPO           UBACIPREFI        UKRADNIK          UPRIM
   URPRIM            URSATI            USATI             ZAKLJUCIOB
 
-util              Offset: 0000aa50H  Code and data size: 17a7H
+util              Offset: 0000aa50H  Code and data size: 17e4H
   BRUTO_ISP         BRUTO_OSN         CLVBOX            HELPOBR
   LDPOLJAINI        OKUMUL            TESTVISEOB        VALOBR
   VISEPUTA          V_FRJES           V_FSPEC         

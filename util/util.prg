@@ -41,7 +41,7 @@ do case
 		endif
 		
 		// ako je ugovoreni iznos manji od odbitka
-		if (nIzn < nLOdb ) 
+		if (nIzn < nLOdb ) .or. radn->opor == "N" 
 			nBrt := ROUND2( nOsn * parobr->k6, gZaok2 )
 		else
 			nBrt := ROUND2( ( (nOsn - nLOdb) / 0.9 + nLOdb ) ;
@@ -95,11 +95,12 @@ do case
 
 		cPrn := ALLTRIM(STR(nOsn)) + " - " + ALLTRIM(STR(nLOdb)) + ;
 			" / 0.9 + " + ALLTRIM(STR(nLOdb)) + " / 0.69 = "
-		if ( nNeto < nLOdb ) 
+		if ( nNeto < nLOdb ) .or. radn->opor == "N" 
 			cPrn := ALLTRIM(STR(nOsn)) + " * " + ;
-				ALLTRIM(STR(parobr->k6)) + " ="
+				ALLTRIM(STR(parobr->k6)) + " = "
 
 		endif
+
 		cPrn += ALLTRIM(STR(nBrt))
 
 	// samostalni poslodavci
