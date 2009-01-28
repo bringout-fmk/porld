@@ -1459,6 +1459,7 @@ local i,aNeta:={}
 nRRSati:=0
 nLOdbitak:=0
 cRTipRada := ""
+nROdbitak := 0
 nKLO := 0
 lSkrivena:=.f.
 lRadniSati:=.f.

@@ -78,6 +78,14 @@ endif
 // izracunaj bruto
 nBrt := bruto_osn( nNeto, cTipRada, nLOdb, nSKoef )
 
+if gVarObracun <> "2"
+	// stari obracun
+	cPrn := ALLTRIM(STR(nNeto)) + " * " + ;
+		ALLTRIM(STR( parobr->k3 / 100 )) + " = " + ;
+		ALLTRIM(STR( nBrt ))
+	return cPrn
+endif
+
 do case
 	// nesamostalni rad
 	case EMPTY(cTipRada)
