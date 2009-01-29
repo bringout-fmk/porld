@@ -141,6 +141,9 @@ FUNCTION KumPrim(cIdRadn,cIdPrim)
     PopWA()
 RETURN nVrati
 
+
+
+
 function PregPl()
 // "1" - pregl.obracunatih/isplacenih plata VAR.2
 // POR-LD
@@ -225,6 +228,8 @@ START PRINT CRET
 P_12CPI
 PRIVATE nKrug:=1
 
+npBO := 0
+
 IF cVarijanta=="3"
 
  Eval(bZagl)
@@ -252,29 +257,76 @@ IF cVarijanta=="3"
      seek str(cGodina2,4)+cidrj+str(cmjesec2,2)
    endif
    npUNeto:=0
+   npBO:=0
+   npPor := 0
+   npDopr := 0
    nNetoOsnova:=0
    do while !eof() .and.  cgodina2==godina .and. cmjesec2=mjesec .and. ( EMPTY(cIdRJ) .or. cidrj==idrj )
-     npUneto+=LD->uneto
-     nNetoOsnova+=MAX(LD->uneto,PAROBR->prosld*gPDLimit/100)
-     skip 1
-   enddo  // LD
-   npBo:=round2(parobr->k3/100*nNetoOsnova,gZaok2)
-   SELECT POR; GO TOP
-   npPom:=npPor:=npPorOps:=0
-   do while !eof()
-     npPom:=max(dlimit,iznos/100*nNetoOsnova)
-     npPor+=npPom
-     skip 1
-   enddo
-   SELECT DOPR; GO TOP
-   npPom:=npDopr:=0
-   do while !eof()
-     npPom:=max(dlimit,iznos/100*npBO)
-     if right(id,1)=="X"
-      npDopr+=npPom
+     
+     cRTipRada := ""
+     nLOdbitak := 0
+     cOpor := ""
+     
+     nRNeto := LD->uneto
+     npUneto += nRNeto
+     
+     nRNetoOsn := MAX(LD->uneto,PAROBR->prosld*gPDLimit/100)
+     nNetoOsnova += nRNetoOsn
+    
+     if gVarObracun == "2"
+
+     	cIdRadn := ld->idradn
+	select radn
+	hseek cIdRadn
+	select ld
+
+	nLOdbitak := ld->ulicodb
+	cRTipRada := radn->tiprada
+	cOpor := radn->opor
+     
      endif
+
+     nBruto := bruto_osn( nRNetoOsn, cRTipRada, nLOdbitak )
+     npBO += nBruto
+   
+     SELECT POR
+     GO TOP
+     npPom:=0
+     npPorOps:=0
+     do while !eof()
+    
+        if gVarObracun == "2" .and. cOpor == "N"
+		if por->portip == "B"
+			skip
+			loop
+		endif
+	endif
+
+        npPom := max( dlimit, iznos/100 * nRNetoOsn )
+        npPor += npPom
+        
+	skip 1
+     
+     enddo
+   
+     SELECT DOPR
+     GO TOP
+     npPom:=0
+     do while !eof()
+        npPom:=max(dlimit,iznos/100*nBruto)
+	npDopr+=npPom
+        if right(id,1)=="X"
+           npDopr+=npPom
+        endif
+        skip 1
+     enddo
+
+     select ld
      skip 1
-   enddo
+   
+   enddo  
+   
+   
    SELECT LD
    USE
    SELECT PAROBR
@@ -392,21 +444,35 @@ do while !eof() .and.  cgodina==godina .and. idrj=cidrj .and. cmjesec=mjesec
  // izracunajmo i poreze i doprinose
 
  nUNeto:=n01+n02
- //nBo:=round2(parobr->k3/100*MAX(nUneto,PAROBR->prosld*gPDLimit/100),gZaok2)
- 
- // nova funkcija za bruto izracunavanje !
- nBO := bruto_osn( nUNeto )
 
- SELECT POR; GO TOP
+ cRTR := ""
+ nLODB := 0
+ cROpor := ""
+ 
+ if gVarObracun == "2"
+ 	cRTR := radn->tiprada
+	nLODB := ulicodb
+	cROpor := radn->opor
+ endif
+
+ // nova funkcija za bruto izracunavanje !
+ nBO := bruto_osn( nUNeto, cRTR, nLOdb )
+
+ SELECT POR
+ GO TOP
  nPom:=nPor:=nPorOps:=0
  do while !eof()
-//   nPom:=round2(max(dlimit,iznos/100*nUNeto),gZaok2)
+   if gVarObracun == "2" .and. cOpor == "N" .and. por->portip == "B"
+   	skip 
+	loop
+   endif
    nPom:=max(dlimit,iznos/100*MAX(nUneto,PAROBR->prosld*gPDLimit/100))
    nPor+=nPom
    skip 1
  enddo
 
- SELECT DOPR; GO TOP
+ SELECT DOPR
+ GO TOP
  nPom:=nDopr:=0
  do while !eof()
 //   nPom:=round2(max(dlimit,iznos/100*nBO),gZaok2)

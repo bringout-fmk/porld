@@ -33,7 +33,7 @@ mnu_izvj          Offset: 00000010H  Code and data size: 768H
   MNUIZVJ           MNUIZVK           MNUIZVR           MNUIZVS
   MNUIZVZ         
 
-izvj              Offset: 00000c00H  Code and data size: 17933H
+izvj              Offset: 00000c00H  Code and data size: 17b23H
   BHSORT            FFOR4             FFOR43            FSVAKI4
   IMAUOP            ISPISFIRME        ISPISOBR          KARTPL
   KUMPRIM           NLJUDI            OBR2_9            PLATSP
@@ -43,11 +43,11 @@ izvj              Offset: 00000c00H  Code and data size: 17933H
   U2KOLONE          UKARTPL           U_DOPR_IZ         ZAGLKAR
   ZPLATSP           ZPREGPL           ZPREGPRIM       
 
-izvj2             Offset: 00019b70H  Code and data size: 524cH
+izvj2             Offset: 00019d60H  Code and data size: 524cH
   IZOBDOP           IZRACDOPR         PREGPRIMPE        SORTPRE2
   SPECNOVCAN        ZPREGPRIMP      
 
-specif            Offset: 0001f830H  Code and data size: 2bf9H
+specif            Offset: 0001fa20H  Code and data size: 2bf9H
   ASEZONA2          CIJELIH           DECIMALA          FFOR3
   FORMNUM1          FORMNUM2          FSVAKI3           IZREZI
   NAZMJESECA        PODOIZSEZ         PRAVIMTEMP        PRNKOD_OFF
