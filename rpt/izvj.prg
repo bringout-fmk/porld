@@ -151,7 +151,11 @@ function PregPl()
 PARAMETERS cVarijanta
 local nC1:=20, nKorPrava:=0, nUkPoDo:=0, nUkDozn:=0
 
-if cVarijanta==NIL; cVarijanta:="1"; ENDIF
+altd()
+
+if cVarijanta==NIL
+	cVarijanta:="1"
+ENDIF
 
 cIdRadn:=space(_LR_)
 cIdRj:=gRj; cmjesec:=gMjesec
@@ -230,152 +234,162 @@ PRIVATE nKrug:=1
 
 npBO := 0
 
-IF cVarijanta=="3"
+IF cVarijanta == "3"
 
- Eval(bZagl)
- nTPor:=nTDopr:=nT1:=nT2:=0
- RekNeto("3")
+	Eval(bZagl)
+ 	nTPor:=nTDopr:=nT1:=nT2:=0
+ 	RekNeto("3")
 
 
-   IF cMjesec==1
-     cGodina2:=cGodina-1; cMjesec2:=12
-   ELSE
-     cGodina2:=cGodina; cMjesec2:=cMjesec-1
-   ENDIF
-   SELECT PAROBR
-   nParRec:=RECNO()
-   HSEEK STR(cMjesec2,2)
-   SELECT LD
-   PushWA()
-   USE
-   select (F_LDNO); usex (KUMPATH+"LDNO") alias LD
-   if EMPTY(cIdRJ) // sve radne jedinice
-     set order to 2
-     seek str(cGodina2,4)+str(cmjesec2,2)
-   else
-     set order to 1
-     seek str(cGodina2,4)+cidrj+str(cmjesec2,2)
-   endif
-   npUNeto:=0
-   npBO:=0
-   npPor := 0
-   npDopr := 0
-   nNetoOsnova:=0
-   do while !eof() .and.  cgodina2==godina .and. cmjesec2=mjesec .and. ( EMPTY(cIdRJ) .or. cidrj==idrj )
-     
-     cRTipRada := ""
-     nLOdbitak := 0
-     cOpor := ""
-     
-     nRNeto := LD->uneto
-     npUneto += nRNeto
-     
-     nRNetoOsn := MAX(LD->uneto,PAROBR->prosld*gPDLimit/100)
-     nNetoOsnova += nRNetoOsn
-    
-     if gVarObracun == "2"
-
-     	cIdRadn := ld->idradn
-	select radn
-	hseek cIdRadn
-	select ld
-
-	nLOdbitak := ld->ulicodb
-	cRTipRada := radn->tiprada
-	cOpor := radn->opor
-     
-     endif
-
-     nBruto := bruto_osn( nRNetoOsn, cRTipRada, nLOdbitak )
-     npBO += nBruto
+   	IF cMjesec==1
+     		cGodina2:=cGodina-1; cMjesec2:=12
+   	ELSE
+     		cGodina2:=cGodina; cMjesec2:=cMjesec-1
+   	ENDIF
    
-     SELECT POR
-     GO TOP
-     npPom:=0
-     npPorOps:=0
-     do while !eof()
-    
-        if gVarObracun == "2" .and. cOpor == "N"
-		if por->portip == "B"
-			skip
-			loop
-		endif
-	endif
+   	SELECT PAROBR
+   	nParRec:=RECNO()
+   	HSEEK STR(cMjesec2,2)
+   	
+	SELECT LD
+   	PushWA()
+   	USE
+   	
+	select (F_LDNO); usex (KUMPATH+"LDNO") alias LD
+   	
+	if EMPTY(cIdRJ) // sve radne jedinice
+     		set order to 2
+     		seek str(cGodina2,4)+str(cmjesec2,2)
+   	else
+     		set order to 1
+     		seek str(cGodina2,4)+cidrj+str(cmjesec2,2)
+   	endif
+   	
+	npUNeto:=0
+   	npBO:=0
+   	npPor := 0
+   	npDopr := 0
+   	nNetoOsnova:=0
+   	
+	do while !eof() .and.  cgodina2==godina .and. cmjesec2=mjesec .and. ( EMPTY(cIdRJ) .or. cidrj==idrj )
+     
+     		altd()
 
-        npPom := max( dlimit, iznos/100 * nRNetoOsn )
-        npPor += npPom
+		cRTipRada := ""
+     		nLOdbitak := 0
+     		cOpor := ""
+     
+     		nRNeto := LD->uneto
+     		npUneto += nRNeto
+     
+     		nRNetoOsn := MAX(LD->uneto,PAROBR->prosld*gPDLimit/100)
+     		nNetoOsnova += nRNetoOsn
+    
+     		if gVarObracun == "2"
+
+     			nTArea := SELECT()
+			cIdRadn := ld->idradn
+			select radn
+			hseek cIdRadn
+			select (nTArea)
+
+			nLOdbitak := ld->ulicodb
+			cRTipRada := 0
+			cOpor := radn->opor
+     
+     		endif
+
+     		nBruto := bruto_osn( nRNetoOsn, cRTipRada, nLOdbitak )
+     		npBO += nBruto
+   
+     		SELECT POR
+     		GO TOP
+     		npPom:=0
+     		npPorOps:=0
+     		
+		do while !eof()
+    
+        		if gVarObracun == "2" .and. cOpor == "N"
+				if por->portip == "B"
+					skip
+					loop
+				endif
+			endif
+
+        		npPom := max( dlimit, iznos/100 * nRNetoOsn )
+        		npPor += npPom
         
-	skip 1
+			skip 1
      
-     enddo
+     		enddo
    
-     SELECT DOPR
-     GO TOP
-     npPom:=0
-     do while !eof()
-        npPom:=max(dlimit,iznos/100*nBruto)
-	npDopr+=npPom
-        if right(id,1)=="X"
-           npDopr+=npPom
-        endif
-        skip 1
-     enddo
+     		SELECT DOPR
+     		GO TOP
+     		npPom:=0
+     		do while !eof()
+        		npPom:=max(dlimit,iznos/100*nBruto)
+        		if right(id,1)=="X"
+           			npDopr += npPom
+        		endif
+        		skip 1
+     		enddo
 
-     select ld
-     skip 1
+     		select ld
+     		skip 1
    
-   enddo  
+   	enddo  
    
    
-   SELECT LD
-   USE
-   SELECT PAROBR
-   GO (nParRec)
-   O_LD
-   PopWA()
+   	SELECT LD
+   	USE
+   	SELECT PAROBR
+   	GO (nParRec)
+   	O_LD
+   	PopWA()
 
- P_10CPI
- ? "--------------------------------- ------------ ------------ ------------"
- ? "        N A Z I V                  OBRACUNATO   PREPLACENO    POTREBNO  "
- ? "--------------------------------- ------------ ------------ ------------"
- ? "UKUPAN IZNOS NETO NAKNADA PLATA :" + STR(ROUND2(nT1+nT2,gZaok2),12,2)+" "+;
+ 	P_10CPI
+ 	? "--------------------------------- ------------ ------------ ------------"
+ 	? "        N A Z I V                  OBRACUNATO   PREPLACENO    POTREBNO  "
+ 	? "--------------------------------- ------------ ------------ ------------"
+ 	? "UKUPAN IZNOS NETO NAKNADA PLATA :" + STR(ROUND2(nT1+nT2,gZaok2),12,2)+" "+;
                                          SPACE(12)+" "+;
                                          STR(ROUND2(nT1+nT2,gZaok2),12,2)
- ? "UKUPAN IZNOS POREZA             :" + STR(ROUND2(nTPor,gZaok2),12,2)+" "+;
+ 	? "UKUPAN IZNOS POREZA             :" + STR(ROUND2(nTPor,gZaok2),12,2)+" "+;
                                          STR(ROUND2(npPor,gZaok2),12,2)+" "+;
                                          STR(ROUND2(nTPor-npPor,gZaok2),12,2)
- ? "UKUPAN IZNOS DOPRINOSA          :" + STR(ROUND2(nTDopr,gZaok2),12,2)+" "+;
+ 	? "UKUPAN IZNOS DOPRINOSA          :" + STR(ROUND2(nTDopr,gZaok2),12,2)+" "+;
                                          STR(ROUND2(npDopr,gZaok2),12,2)+" "+;
                                          STR(ROUND2(nTDopr-npDopr,gZaok2),12,2)
- ? "UKUPAN IZNOS BRUTO NAKNADA PLATA:" + STR(ROUND2(nT1+nT2+nTPor+nTDopr,gZaok2),12,2)+" "+;
+ 	? "UKUPAN IZNOS BRUTO NAKNADA PLATA:" + STR(ROUND2(nT1+nT2+nTPor+nTDopr,gZaok2),12,2)+" "+;
                                          STR(ROUND2(npPor+npDopr,gZaok2),12,2)+" "+;
                                          STR(ROUND2(nT1+nT2+nTPor-npPor+nTDopr-npDopr,gZaok2),12,2)
 
 ELSE
 
-DO WHILE cVarijanta=="2".and.nKrug<3 .or. cVarijanta=="1".and.nKrug<2
+ DO WHILE cVarijanta=="2".and.nKrug<3 .or. cVarijanta=="1".and.nKrug<2
+ 
+  IF nKrug==2
+    m+=REPL("-",20)
+    SELECT LD
+    USE
+    select (F_LDNO)  ; usex (KUMPATH+"LDNO") alias LD
 
-IF nKrug==2
-  m+=REPL("-",20)
-  SELECT LD
-  USE
-  select (F_LDNO)  ; usex (KUMPATH+"LDNO") alias LD
-
-  IF cVarijanta=="3"
-   cSort2:="SortVar(STR(godina)+STR(mjesec)+idradn+idkred)+SortPrez(idradn)"
-  ELSEIF cVarijanta=="2"
-   cSort2:="SortPrez(idradn)"
-  ELSE
-   cSort2:="SortVar(STR(godina)+STR(mjesec)+idradn+idkred)"
+    IF cVarijanta=="3"
+     cSort2:="SortVar(STR(godina)+STR(mjesec)+idradn+idkred)+SortPrez(idradn)"
+    ELSEIF cVarijanta=="2"
+     cSort2:="SortPrez(idradn)"
+    ELSE
+     cSort2:="SortVar(STR(godina)+STR(mjesec)+idradn+idkred)"
+    ENDIF
+    INDEX ON &cSort2 TO "TMPLDNO" FOR &cFilt
+    GO TOP
   ENDIF
-  INDEX ON &cSort2 TO "TMPLDNO" FOR &cFilt
-  GO TOP
-ENDIF
 
 nRbr:=0
 nT1:=nT2:=nTPor:=nTDopr:=0
 n01:=0  // van neta plus
 n02:=0  // van neta minus
+nUBO := 0
 cVrLica:="X"
 
 IF !EOF(); EVAL(bZagl); ENDIF
@@ -412,18 +426,33 @@ do while !eof() .and.  cgodina==godina .and. idrj=cidrj .and. cmjesec=mjesec
 
  n01:=0
  n02:=0
+ 
+ cRTR := ""
+ nLODB := 0
+ cROpor := ""
+ 
+ if gVarObracun == "2"
+ 	cRTR := radn->tiprada
+	nLODB := 0
+	cROpor := radn->opor
+ endif
+ 
  for i:=1 to cLDPolja
   cPom:=padl(alltrim(str(i)),2,"0")
   select tippr; seek cPom; select ld
 
   if tippr->(found()) .and. tippr->aktivan=="D"
-   nIznos:=_i&cpom
-   if cpom=="01"
+     
+     nIznos:=_i&cpom
+  
+     if cpom=="01"
       n01+=nIznos
-   else
+     else
       n02+=nIznos
-   endif
+     endif
+  
   endif
+ 
  next
 
  if prow()>57+gPStranica; FF; Eval(bZagl); endif  // bilo 62
@@ -441,50 +470,36 @@ do while !eof() .and.  cgodina==godina .and. idrj=cidrj .and. cmjesec=mjesec
    @ prow(),pcol()+1 SAY razlog
  ENDIF
 
- // izracunajmo i poreze i doprinose
-
  nUNeto:=n01+n02
-
- cRTR := ""
- nLODB := 0
- cROpor := ""
  
- if gVarObracun == "2"
- 	cRTR := radn->tiprada
-	nLODB := ulicodb
-	cROpor := radn->opor
- endif
-
+ // izracunajmo i poreze i doprinose
  // nova funkcija za bruto izracunavanje !
  nBO := bruto_osn( nUNeto, cRTR, nLOdb )
+ nUBO += nBO
 
  SELECT POR
  GO TOP
  nPom:=nPor:=nPorOps:=0
  do while !eof()
-   if gVarObracun == "2" .and. cOpor == "N" .and. por->portip == "B"
+      if gVarObracun == "2" .and. cROpor == "N" .and. por->portip == "B"
    	skip 
 	loop
-   endif
-   nPom:=max(dlimit,iznos/100*MAX(nUneto,PAROBR->prosld*gPDLimit/100))
-   nPor+=nPom
-   skip 1
+      endif
+      nPom:=max(dlimit,iznos/100*MAX(nUNeto,PAROBR->prosld*gPDLimit/100))
+      nPor+=nPom
+      skip 1
  enddo
 
  SELECT DOPR
  GO TOP
  nPom:=nDopr:=0
  do while !eof()
-//   nPom:=round2(max(dlimit,iznos/100*nBO),gZaok2)
-   nPom:=max(dlimit,iznos/100*nBO)
-   if right(id,1)=="X"
-    nDopr+=nPom
-   endif
-   skip 1
+      nPom:=max(dlimit,iznos/100*nBO)
+      if right(id,1)=="X"
+        nDopr+=nPom
+      endif
+      skip 1
  enddo
-
-// @ prow(),pcol()+1 SAY nPor+nDopr  pict gpici
-// @ prow(),pcol()+1 SAY n01+n02+nPor+nDopr  pict gpici
 
  nTPor  += nPor
  nTDopr += nDopr
@@ -514,6 +529,7 @@ IF cVarijanta=="2"
  nUkPoDo += (nTPor+nTDopr)
  nUkDozn += (nT1+nT2+nTPor+nTDopr)
 ELSE
+ ? "UKUPAN IZNOS BRUTO OSNOVICE     :"+STR(ROUND2(nUBO, gZaok2), 12, 2)
  ? "UKUPAN IZNOS POREZA I DOPRINOSA :"+STR(Round2(nTPor+nTDopr,gZaok2),12,2)
  ? "UKUPAN IZNOS BRUTO NAKNADA PLATA:"+STR(Round2(nT1+nT2+nTPor+nTDopr,gZaok2),12,2)
 ENDIF
@@ -588,7 +604,9 @@ IF cVarijanta!="3"
 ENDIF
 return
 
-
+// ----------------------------------------------
+// rekapitulacija neto
+// ----------------------------------------------
 function RekNeto(cVarijanta)
 LOCAL aLeg:={}, aPom:={,,}, cVarSort:="2"
 IF cVarijanta==NIL; cVarijanta:="1"; ENDIF
@@ -931,6 +949,15 @@ FUNCTION FFor43()
     !empty(ckbenef) .and. ckbenef<>kbenef->id
    return .f.
  endif
+
+ cRTR := ""
+ nLOdb := 0
+ cOpor := ""
+ if gVarObracun == "2"
+ 	cRTR := radn->tiprada
+	cOpor := radn->opor
+ endif
+
  cNaziv:=Ocitaj(F_RADN,cIdRadn,"TRIM(NAZ)+' '+TRIM(IME)")
  FOR i:=1 TO nPoljaPr
    cPom77:="SI"+ALLTRIM(STR(i))
@@ -954,10 +981,14 @@ FUNCTION FFor43()
  ENDDO
 
  nUNeto:=siu
- nBo := bruto_osn(nUNeto)
+ nBo := bruto_osn(nUNeto, cRTR, nLOdb)
  SELECT POR; GO TOP
  nPom:=nPor:=nPorOps:=0
  do while !eof()
+   if gVarObracun == "2" .and. cOpor == "N" .and. por->portip == "B"
+   	skip
+	loop
+   endif
    nPom:=max(dlimit,iznos/100*MAX(nUNeto,PAROBR->prosld*gPDLimit/100))
    nPor+=nPom
    skip 1
