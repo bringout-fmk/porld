@@ -232,6 +232,10 @@ return nil
 
 
 function LDPoljaINI()
+ if !FILE(KUMPATH + "LD.DBF")
+ 	public cLdPolja := 40
+	return 
+ endif
  O_LD
  if ld->(fieldpos("S40"))<>0
    public cLDPolja:=40
